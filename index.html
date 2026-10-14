@@ -1,0 +1,1329 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="description" content="A-HRV-RL：以心率變異度與強化學習打造的個人化舒壓與放鬆 IoT 系統。"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>A-HRV-RL 研究網站</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap">
+<style>
+/* Layout: same sidebar + search + two-level navigation; monochrome isometric line-art skin — white cards on a faint isometric grid, serif headlines with a grey second clause, black pill buttons */
+:root{
+  --bg:#F6F6F3;--side:#FFFFFF;--card:#FFFFFF;--fg:#0E0E0E;--muted:#4F4F4A;--line:#E3E3DE;--grid:rgba(20,20,20,.05);
+  --tint:#F1F1ED;--tint-2:#E2E2DC;--ink-2:#2E2E2E;
+  --accent:#141414;--accent-2:#000000;--accent-soft:#EFEFEB;--on-accent:#FFFFFF;--ink-btn:#141414;--btn-bg:#141414;--btn-fg:#FFFFFF;
+  --pink:#141414;--pink-soft:#F1F1ED;--blue:#141414;--blue-soft:#F1F1ED;--green:#2E8A57;--green-soft:#F1F1ED;
+  --orange:#AD640B;--orange-soft:#F1F1ED;--danger:#C2410C;
+  --sim-bg:#FFFFFF;--sim-panel:#F4F4F0;--sim-fg:#141414;--sim-muted:#4F4F4A;--sim-grid:#E2E2DC;
+  --shadow:none;
+  --f-ui:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC",sans-serif;
+  --f-display:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC",sans-serif;
+  --r-lg:18px;--r-md:12px;
+}
+/* light-only by request: no dark theme */
+:root{color-scheme:light}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+h1,h2,h3{margin:0;text-wrap:balance;line-height:1.25}
+p{margin:0}
+.ico{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* shell */
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100%}
+.side{position:sticky;top:0;height:100vh;height:100dvh;background:var(--side);padding:28px 22px;display:flex;flex-direction:column;gap:28px;overflow-y:auto}
+.side,.results,.tblwrap,.formula{scrollbar-width:thin;scrollbar-color:transparent transparent}
+.side:hover,.results:hover,.tblwrap:hover,.formula:hover{scrollbar-color:var(--line) transparent}
+html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-button{display:none;height:0;width:0}
+::-webkit-scrollbar-thumb{background:transparent;border-radius:3px}
+:hover::-webkit-scrollbar-thumb,html::-webkit-scrollbar-thumb{background:var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:21px;letter-spacing:-.2px}
+.logo-mark{width:34px;height:34px;border-radius:50%;background:var(--accent);display:grid;place-items:center}
+.logo-mark svg{width:18px;height:18px;fill:var(--on-accent)}
+.nav-group{display:flex;flex-direction:column;gap:4px}
+.nav-label{font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 10px;border-radius:12px;font-size:16px;font-weight:500;color:var(--fg)}
+.nav-item:hover{background:var(--bg)}
+.nav-item.on{color:var(--fg);font-weight:700}
+.nav-item.on .ico{color:var(--accent)}
+.friend{display:flex;align-items:center;gap:12px;padding:8px 6px;border-radius:12px}
+.friend:hover{background:var(--bg)}
+.av{width:38px;height:38px;border-radius:50%;flex:none;overflow:hidden;display:grid;place-items:center;background:var(--accent-soft)}
+.av img{width:100%;height:100%;object-fit:cover}
+.friend b{display:block;font-size:14px;font-weight:600;line-height:1.3}
+.friend small{display:block;font-size:12px;color:var(--muted)}
+.side-foot{margin-top:auto}
+.main{padding:24px 28px 56px;min-width:0;display:flex;flex-direction:column;gap:24px;max-width:1180px;width:100%}
+.topbar{display:flex;gap:12px;align-items:center}
+.menu-btn{display:none;width:46px;height:46px;border-radius:50%;background:var(--card);border:1px solid var(--line);place-items:center;flex:none}
+.search{position:relative;flex:1}
+.search input{width:100%;height:46px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:0 18px 0 46px;font:inherit;font-size:14px}
+.search input::placeholder{color:var(--muted)}
+.search .ico{position:absolute;left:17px;top:13px;color:var(--muted)}
+.results{position:absolute;left:0;right:0;top:54px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px;z-index:20;box-shadow:0 12px 32px rgba(25,20,60,.12);display:flex;flex-direction:column;max-height:360px;overflow-y:auto}
+.results a{display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px}
+.results a:hover,.results a.hl{background:var(--bg)}
+.results small{color:var(--muted);display:block;font-size:12px}
+.results .none{padding:12px;color:var(--muted)}
+
+/* banner */
+.banner{position:relative;overflow:hidden;background:var(--accent);color:var(--on-accent);border-radius:var(--r-lg);padding:28px 32px 30px;display:flex;flex-direction:column;gap:14px}
+.banner .eyebrow{font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;opacity:.9}
+.banner h1{font-size:clamp(24px,3.2vw,34px);font-weight:700;max-width:620px;letter-spacing:-.3px;position:relative}
+.banner p{max-width:560px;opacity:.92;position:relative}
+.banner .stars{position:absolute;right:0;top:0;height:100%;width:min(55%,460px);pointer-events:none}
+.btn-dark{align-self:flex-start;display:inline-flex;align-items:center;gap:14px;background:var(--ink-btn);color:#FFFFFF;border-radius:999px;padding:8px 8px 8px 20px;font-weight:600;font-size:14px;position:relative}
+.btn-dark span{width:30px;height:30px;border-radius:50%;background:#FFFFFF;color:#16161D;display:grid;place-items:center}
+.btn-dark span .ico{width:16px;height:16px;stroke-width:2.4}
+
+/* stat chips */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+.stat{background:var(--card);border-radius:var(--r-lg);padding:14px 18px;display:flex;align-items:center;gap:16px;box-shadow:var(--shadow)}
+.stat:hover{outline:1px solid var(--line)}
+.bubble{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;flex:none}
+.stat small{display:block;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.stat b{display:block;font-size:17px;font-weight:700}
+.stat .go{margin-left:auto;color:var(--muted)}
+
+/* section heads */
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.head h2{font-size:19px;font-weight:700;letter-spacing:-.2px}
+.arrows{display:flex;gap:10px}
+.arw{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--card);color:var(--accent);border:1px solid var(--line)}
+.arw.solid{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.arw .ico{width:16px;height:16px;stroke-width:2.2}
+.see{font-size:13px;color:var(--accent);text-decoration:underline;text-underline-offset:3px;font-weight:600}
+
+/* course cards */
+.panel{background:var(--card);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow)}
+.rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(230px,calc((100% - 40px)/3));gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;scroll-behavior:smooth}
+.rail::-webkit-scrollbar{display:none}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px}
+.ccard{display:flex;flex-direction:column;gap:12px;scroll-snap-align:start;min-width:0;position:relative}
+.cover{position:relative;aspect-ratio:16/10;border-radius:16px;overflow:hidden;display:grid;place-items:center;max-width:100%}
+.cover img{width:100%;height:100%;object-fit:cover}
+.cover .big{font-weight:700;font-size:28px;letter-spacing:-.5px;text-align:center;padding:0 16px;line-height:1.15}
+.fav{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(20,20,30,.38);color:#FFFFFF;display:grid;place-items:center;z-index:2}
+.fav .ico{width:16px;height:16px}
+.fav[aria-pressed="true"] .ico{fill:#FFFFFF}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;letter-spacing:.4px;padding:4px 10px;border-radius:999px;align-self:flex-start;white-space:nowrap}
+.pill .ico{width:13px;height:13px}
+.ccard h3{font-size:15.5px;font-weight:600;line-height:1.4;min-height:2.8em}
+.ccard h3 a::after{content:"";position:absolute;inset:0;z-index:1}
+.track{height:3px;border-radius:3px;background:var(--line);overflow:hidden}
+.track i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.mentor{display:flex;align-items:center;gap:10px}
+.mentor .av{width:32px;height:32px}
+.mentor .av .ico{width:16px;height:16px}
+.mentor b{display:block;font-size:13px;font-weight:600;line-height:1.3}
+.mentor small{display:block;font-size:12px;color:var(--muted)}
+
+/* color sets */
+.c-pink{--c:var(--pink);--cs:var(--pink-soft)}
+.c-blue{--c:var(--blue);--cs:var(--blue-soft)}
+.c-purple{--c:var(--accent);--cs:var(--accent-soft)}
+.c-green{--c:var(--green);--cs:var(--green-soft)}
+.c-orange{--c:var(--orange);--cs:var(--orange-soft)}
+.tint{background:var(--cs);color:var(--c)}
+
+/* table */
+.tblwrap{overflow-x:auto;background:var(--card);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:11.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--card)}
+td{padding:14px 18px;border-bottom:1px dashed var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.lesson{display:flex;align-items:center;gap:12px;min-width:220px}
+.lesson b{display:block;font-weight:600}
+.lesson small{display:block;color:var(--muted);font-size:12px}
+.go-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:inline-grid;place-items:center}
+.go-btn .ico{width:14px;height:14px;stroke-width:2.2}
+.tc{text-align:center}
+.num{font-variant-numeric:tabular-nums}
+
+/* chapter pages */
+.crumbs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.crumbs a:hover{color:var(--accent)}
+.crumbs .sep{opacity:.6}
+.hero{border-radius:var(--r-lg);padding:28px 32px;display:flex;flex-direction:column;gap:12px;background:var(--cs)}
+.hero h1{font-size:clamp(24px,3vw,32px);font-weight:700;letter-spacing:-.3px;color:var(--fg)}
+.hero p{color:var(--fg);opacity:.8;max-width:720px}
+.hero .pill{background:var(--card);color:var(--c)}
+.meta{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.body{display:flex;flex-direction:column;gap:22px}
+.body h2{font-size:19px;font-weight:700}
+.lead{max-width:760px;font-size:16px}
+.boxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+.box{background:var(--card);border-radius:var(--r-md);padding:20px 22px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);min-width:0}
+.box h3{font-size:16px;font-weight:700}
+.box p,.box li{color:var(--fg);opacity:1;font-size:14.5px}
+.box ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.box .n{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.5px}
+.kpi{font-size:38px;font-weight:700;letter-spacing:-1px;line-height:1.1;font-variant-numeric:tabular-nums}
+.formula{background:var(--card);border-radius:var(--r-md);padding:18px 22px;font-weight:700;font-size:clamp(16px,2.2vw,22px);overflow-x:auto;white-space:nowrap;border-left:4px solid var(--accent)}
+.note{font-size:13.5px;color:var(--muted)}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+figure{margin:0;display:flex;flex-direction:column;gap:8px}
+figure img{width:100%;border-radius:var(--r-md);aspect-ratio:4/3;object-fit:cover;background:var(--card)}
+figure img.contain{object-fit:contain;aspect-ratio:auto}
+figcaption{font-size:13px;color:var(--muted)}
+.layers{display:flex;flex-direction:column;gap:10px}
+.layer{border-radius:var(--r-md);padding:16px 20px;display:grid;grid-template-columns:minmax(150px,230px) minmax(0,1fr);gap:16px;align-items:center;background:var(--cs);border:1.5px solid var(--c)}
+.layer b{color:var(--c);font-size:16px}
+.layer span{font-size:14.5px}
+.hub{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:center}
+.hub .box{border:1.5px solid var(--c)}
+.hub .center{grid-column:2;grid-row:1 / span 2;background:var(--accent);color:var(--on-accent);text-align:center;justify-content:center;min-height:220px}
+.hub .center p{color:var(--on-accent);opacity:.9}
+.hub .proto{font-size:12px;font-weight:700;color:var(--c);letter-spacing:.5px}
+.swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px}
+.sw{background:var(--card);border-radius:var(--r-md);overflow:hidden;box-shadow:var(--shadow)}
+.sw i{display:block;height:84px}
+.sw div{padding:14px 16px;display:flex;flex-direction:column;gap:2px;font-size:13.5px}
+.sw b{font-size:15px}
+.chips{display:grid;grid-template-columns:2fr 4fr 4fr;gap:14px}
+.chips .box{gap:10px}
+.srow{display:flex;gap:6px}
+.srow span{flex:1;text-align:center;font-weight:700;font-size:13px;border-radius:8px;padding:6px 0}
+.pager{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pager a{background:var(--card);border-radius:var(--r-md);padding:16px 20px;display:flex;flex-direction:column;gap:2px;box-shadow:var(--shadow)}
+.pager a:hover{outline:1px solid var(--accent)}
+.pager small{color:var(--muted);font-size:12px}
+.pager .next{text-align:right}
+.diverge{display:flex;flex-direction:column;gap:10px}
+.drow{display:grid;grid-template-columns:48px 1fr 2px 1fr;align-items:center;gap:0}
+.drow b{font-size:14px}
+.drow .axis{height:40px;background:var(--fg);opacity:.5}
+.dbar{height:26px}
+.drow .lbl{font-size:13px;font-weight:700;padding:0 8px;white-space:nowrap}
+
+/* simulation */
+.sim{background:var(--sim-bg);color:var(--sim-fg);border-radius:var(--r-lg);padding:20px;display:flex;flex-direction:column;gap:16px}
+.sim-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+#clk{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.sim-top .note{color:var(--sim-muted)}
+.sim-btn{background:var(--sim-panel);color:var(--sim-fg);border-radius:999px;padding:6px 16px;font-size:13px;font-weight:600}
+.sim-barwrap{position:relative;padding-bottom:26px}
+.sim-bar{display:flex;border-radius:10px;overflow:hidden;height:58px}
+.sg{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;line-height:1.25;color:#10162A;opacity:.38;transition:opacity .3s;border-right:2px solid var(--sim-bg);min-width:0;text-align:center}
+.sg b{font-size:13px}
+.sg.on{opacity:1}
+#ph{position:absolute;top:-6px;width:4px;height:70px;margin-left:-2px;background:var(--sim-fg);border-radius:2px;box-shadow:0 0 10px var(--sim-fg)}
+.mk{position:absolute;bottom:0;font-size:12px;color:#F0B45A;transform:translateX(-50%);white-space:nowrap}
+.sim-panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.sp{background:var(--sim-panel);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.sp .t{font-size:12.5px;color:var(--sim-muted);font-weight:600}
+.booth{position:relative;height:150px;display:flex;justify-content:center;align-items:center}
+.led{position:absolute;top:8px;bottom:8px;width:12px;border-radius:6px;background:#E4E4DF}
+#mon{width:62%;height:100px;background:#FFFFFF;border:3px solid #CFCFC8;border-radius:8px;display:grid;place-items:center;text-align:center;padding:6px}
+#word{font-size:15px;color:var(--sim-muted);font-weight:700}
+#hp{font-size:13px;text-align:center}
+.scene{grid-column:1 / -1}
+.scene-svg{width:100%;height:auto;display:block;border-radius:10px;font-family:var(--f-ui);max-width:100%}
+.ledc{fill:#BDBDB5}
+#ecg{width:100%;height:90px;display:block}
+.vals{display:flex;gap:20px}
+.vals small{display:block;font-size:12px;color:var(--sim-muted)}
+.vals b{font-size:24px;font-variant-numeric:tabular-nums}
+.qrow{display:grid;grid-template-columns:86px 1fr 46px;gap:8px;align-items:center;font-size:12.5px}
+.qtrack{height:16px;border-radius:4px;background:#E4E4DF;overflow:hidden}
+.qtrack i{display:block;height:100%;transition:width .5s}
+.qrow span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+#qs{font-size:12.5px;color:var(--sim-muted);white-space:pre-line;min-height:3.9em}
+.sim-cap{background:var(--sim-panel);border-radius:12px;padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:13.5px}
+#pill{padding:3px 12px;border-radius:999px;color:#10162A;font-weight:700;white-space:nowrap}
+
+/* isometric monochrome skin */
+body{background-image:repeating-linear-gradient(30deg,var(--grid) 0 1px,transparent 1px 32px),repeating-linear-gradient(150deg,var(--grid) 0 1px,transparent 1px 32px)}
+.c-pink,.c-blue,.c-purple,.c-green,.c-orange{--c:var(--fg);--cs:var(--tint)}
+.stat,.panel,.box,.tblwrap,.sw,.pager a,.vid-ctl,.search input,.results,.hero{border:1px solid var(--line);box-shadow:none}
+.pill{background:var(--card);border:1px solid var(--line);color:var(--fg);letter-spacing:.6px}
+.nav-item.on{background:var(--tint)}
+.nav-item.on .ico{color:var(--fg)}
+.logo-mark{background:var(--fg)}
+.logo-mark svg{fill:var(--card)}
+.head h2,.body h2{font-family:var(--f-display);font-weight:700;font-size:27px;letter-spacing:-.2px}
+.hero{background:var(--card);background-image:repeating-linear-gradient(30deg,var(--grid) 0 1px,transparent 1px 24px),repeating-linear-gradient(150deg,var(--grid) 0 1px,transparent 1px 24px)}
+.hero h1{font-family:var(--f-display);font-weight:700;font-size:clamp(28px,3.4vw,42px);letter-spacing:-.4px}
+.hero p{opacity:1;color:var(--muted)}
+.kpi{font-family:var(--f-display);font-weight:700;letter-spacing:-.5px;font-size:44px}
+.cover{border:1px solid var(--line)}
+.cover .big{font-family:var(--f-display);font-weight:700;font-size:32px}
+.cover img,.av img,figure img{filter:grayscale(1) contrast(1.04);transition:filter .5s}
+.ccard:hover .cover img,figure:hover img,.friend:hover .av img{filter:none}
+.fav{background:var(--card);color:var(--fg);border:1px solid var(--line)}
+.fav[aria-pressed="true"] .ico{fill:currentColor}
+.arw{color:var(--fg)}
+.see{color:var(--fg)}
+.go-btn{border-color:var(--fg);color:var(--fg)}
+.layer{background:var(--card);border:1px solid var(--line)}
+.layer b{color:var(--fg)}
+.hub .box{border:1px solid var(--line)}
+.hub .center{background:var(--card);color:var(--fg);border:2px solid var(--fg)}
+.hub .center p{color:var(--fg)}
+.sim{border:1px solid var(--line)}
+.sim-panels{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.qtrack{background:var(--line)}
+.formula{border-left-color:var(--fg);font-family:var(--f-display);font-weight:700;font-size:clamp(18px,2.4vw,26px)}
+.srow span{border:1px solid var(--line)}
+.banner{background:var(--card);color:var(--fg);border:1px solid var(--line);display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:8px;align-items:center;padding:36px 20px 28px 40px}
+.banner-txt{display:flex;flex-direction:column;gap:18px;min-width:0}
+.banner .eyebrow{color:var(--muted);opacity:1}
+.banner h1{font-family:var(--f-display);font-weight:700;font-size:clamp(30px,3.6vw,48px);line-height:1.12;letter-spacing:-.6px;max-width:none}
+.banner h1 .dim{color:var(--muted)}
+.banner p{opacity:1;color:var(--muted);font-size:14.5px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn-dark{background:var(--btn-bg);color:var(--btn-fg)}
+.btn-dark span{background:var(--btn-fg);color:var(--btn-bg)}
+.btn-line{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:10px 20px;font-weight:600;font-size:14px;background:var(--card);color:var(--fg)}
+.btn-line:hover{border-color:var(--fg)}
+.banner-art{min-width:0}
+.iso-svg{width:100%;height:auto;display:block;max-width:100%;overflow:visible}
+.iso-svg polygon{stroke:var(--fg);stroke-width:1.1;stroke-linejoin:round}
+.f-t{fill:var(--card)}.f-l{fill:var(--tint)}.f-r{fill:var(--tint-2)}
+.f-t.ink{fill:var(--fg)}.f-l.ink,.f-r.ink{fill:var(--ink-2)}
+.iso-ln{fill:none;stroke:var(--fg);stroke-width:1.3;stroke-linejoin:round;stroke-linecap:round}
+.iso-dash{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:3 4}
+.iso-led{fill:var(--card);stroke:var(--fg);stroke-width:1}
+.iso-led.on{fill:var(--fg)}
+.iso-pk{fill:var(--fg)}
+.iso-lbl{font-size:13px;fill:var(--muted);font-family:var(--f-ui)}
+
+/* subtle glass + faint gradients */
+:root{--glass:rgba(255,255,255,.86);--glass-strong:rgba(255,255,255,.94);--glass-line:rgba(20,20,20,.07);
+  --lift:inset 0 1px 0 rgba(255,255,255,.85),0 1px 2px rgba(20,20,20,.03),0 10px 28px -16px rgba(20,20,20,.12)}
+body{background-image:
+  radial-gradient(1100px 620px at 88% -8%,rgba(206,214,230,.5),transparent 62%),
+  radial-gradient(900px 560px at -8% 108%,rgba(232,224,210,.45),transparent 60%),
+  repeating-linear-gradient(30deg,var(--grid) 0 1px,transparent 1px 32px),
+  repeating-linear-gradient(150deg,var(--grid) 0 1px,transparent 1px 32px);background-attachment:fixed}
+.side{background:linear-gradient(180deg,rgba(255,255,255,.78),rgba(255,255,255,.6));-webkit-backdrop-filter:blur(18px) saturate(1.15);backdrop-filter:blur(18px) saturate(1.15);border-right:1px solid var(--glass-line)}
+.stat,.panel,.tblwrap,.pager a,.vid-ctl,.search input,.hero,.banner,.comic,.sim,.sw{background-color:var(--glass);-webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);border-color:var(--glass-line);box-shadow:var(--lift)}
+.box{background-color:rgba(255,255,255,.88);border-color:var(--glass-line);box-shadow:var(--lift)}
+.banner{background-image:linear-gradient(135deg,rgba(255,255,255,.92) 0%,rgba(255,255,255,.66) 55%,rgba(236,239,245,.6) 100%)}
+.results{background:var(--glass-strong);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+th{background:transparent}
+.search .ico{z-index:2}
+.btn-dark{background:linear-gradient(180deg,#2B2B2B,#111111);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 6px 16px -8px rgba(0,0,0,.35)}
+.btn-line,.fav,.pill,.arw{background:rgba(255,255,255,.75);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.nav-item.on{background:linear-gradient(90deg,rgba(20,20,20,.07),rgba(20,20,20,.025))}
+.track i{background:linear-gradient(90deg,#141414,#555555)}
+
+/* collapsible sidebar */
+.side-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.collapse-btn{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--muted);flex:none}
+.collapse-btn:hover{background:var(--tint);color:var(--fg)}
+#collapseArrow{transition:transform .25s;transform-origin:14px 12px}
+@media (min-width:901px){
+  .app{transition:grid-template-columns .25s ease}
+  .app.collapsed{grid-template-columns:76px minmax(0,1fr)}
+  .app.collapsed .side{padding:28px 12px;align-items:center}
+  .app.collapsed .side .lbl,.app.collapsed .side .nav-label{display:none}
+  .app.collapsed .side-top{flex-direction:column;gap:14px}
+  .app.collapsed .nav-group{align-items:center}
+  .app.collapsed .nav-item{justify-content:center;padding:10px}
+  .app.collapsed .friend{justify-content:center;padding:6px}
+  .app.collapsed #collapseArrow{transform:rotate(180deg)}
+}
+@media (max-width:900px){.collapse-btn{display:none}}
+
+/* future product: comic + exploded view */
+.comic{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px;overflow:hidden}
+.comic svg{width:100%;height:auto;display:block}
+.cm-frame{fill:var(--card);stroke:var(--fg);stroke-width:3}
+.cm-ln{fill:none;stroke:var(--fg);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.cm-ln.thin{stroke-width:1.6}
+.cm-fill{fill:var(--card);stroke:var(--fg);stroke-width:2.4;stroke-linejoin:round}
+.cm-ink{fill:var(--fg)}
+.cm-tint-s{fill:var(--tint);stroke:var(--fg);stroke-width:1.6}
+.cm-limb-o{fill:none;stroke:var(--fg);stroke-width:24;stroke-linecap:round;stroke-linejoin:round}
+.cm-limb-i{fill:none;stroke:var(--card);stroke-width:19;stroke-linecap:round;stroke-linejoin:round}
+.cm-speed{stroke:var(--muted);stroke-width:1;opacity:.45}
+.cm-dome{fill:var(--card);fill-opacity:.3;stroke:var(--fg);stroke-width:2.4}
+.cm-dome.ghost{stroke-dasharray:6 6;fill-opacity:0}
+.cm-led{fill:none;stroke:var(--muted);stroke-width:5;stroke-linecap:round;stroke-dasharray:.1 11}
+.cm-led.on{stroke:var(--fg)}
+.cm-glow{fill:none;stroke:var(--fg);stroke-width:16;opacity:.1;stroke-linecap:round}
+.cm-txt{font-family:var(--f-ui);font-weight:700;font-size:14px;fill:var(--fg)}
+.cm-cap rect{fill:var(--fg)}
+.cm-cap text{fill:var(--card);font-family:var(--f-ui);font-weight:700;font-size:15px}
+.cm-scan{fill:none;stroke:var(--fg);stroke-width:2;stroke-dasharray:4 4}
+.cm-dots{fill:url(#halftone);stroke:none}
+.iso-svg .st{stroke:var(--fg);stroke-width:1.1}
+.iso-svg .nf{fill:none}
+.iso-svg .dome{fill:var(--card);fill-opacity:.4;stroke:var(--fg);stroke-width:1.2}
+.ex-num{font-size:13px;font-weight:700;fill:var(--fg);font-family:var(--f-ui)}
+.ex-ctl{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.ex-ctl input{accent-color:var(--fg);width:150px}
+.exwrap{padding:12px 16px}
+.exwrap svg{max-height:720px}
+
+/* concept video */
+.vid{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#FFFFFF;border:1px solid var(--line);aspect-ratio:16/9;max-width:100%}
+.vid canvas{width:100%;height:100%;display:block;cursor:pointer}
+.vid-big{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.vid-big .ico{width:30px;height:30px}
+.vid-ctl{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:999px;padding:8px 18px 8px 8px;box-shadow:var(--shadow)}
+.vid-play{width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
+.vid-play .ico{width:16px;height:16px}
+.vid-ctl input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.vid-time{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);white-space:nowrap}
+
+/* mobile */
+.scrim{display:none}
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;left:0;top:0;bottom:0;width:272px;z-index:40;transform:translateX(-105%);transition:transform .25s;padding-top:calc(28px + env(safe-area-inset-top,0px))}
+  .side.open{transform:none;box-shadow:0 0 40px rgba(0,0,0,.25)}
+  .scrim.show{display:block;position:fixed;inset:0;background:rgba(10,10,20,.35);z-index:30}
+  .menu-btn{display:grid}
+  .main{padding:16px 16px 48px}
+  .rail{grid-auto-columns:minmax(240px,78%)}
+  .hub{grid-template-columns:1fr}
+  .hub .center{grid-column:auto;grid-row:auto;min-height:0}
+  .chips{grid-template-columns:1fr}
+  .layer{grid-template-columns:1fr;gap:4px}
+  .hide-sm{display:none}
+  .banner{padding:24px 20px;grid-template-columns:minmax(0,1fr)}
+  .pager{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+
+<div class="app">
+  <aside class="side" id="side" aria-label="主選單">
+    <div class="side-top"><a class="logo" href="#home" title="A-HRV-RL 總覽"><span class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z" transform="translate(0 3)"/></svg></span><span class="lbl">A-HRV-RL</span></a><button class="collapse-btn" id="collapseBtn" type="button" aria-label="收合側欄" aria-expanded="true" title="收合側欄"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.5 4.5v15"/><path id="collapseArrow" d="m15.5 9.5-2.5 2.5 2.5 2.5"/></svg></button></div>
+    <nav class="nav-group" aria-label="章節">
+      <div class="nav-label">Overview</div>
+      <div id="nav"></div>
+    </nav>
+    <div class="nav-group">
+      <div class="nav-label">核心設備</div>
+      <a class="friend" href="#photos"><span class="av"><img src="img/polar.jpg" alt=""></span><span class="lbl"><b>Polar H10</b><small>感測・BLE</small></span></a>
+      <a class="friend" href="#photos"><span class="av"><img src="img/pi5.jpg" alt=""></span><span class="lbl"><b>Raspberry Pi 5</b><small>運算・Edge RL</small></span></a>
+      <a class="friend" href="#build"><span class="av"><img src="img/led_g.jpg" alt=""></span><span class="lbl"><b>WS2812 LED</b><small>燈光・GPIO D10</small></span></a>
+    </div>
+    <div class="nav-group side-foot">
+      <div class="nav-label">Settings</div>
+      <a class="nav-item" href="#refs"><svg class="ico" viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19"/></svg><span class="lbl">參考資料</span></a>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <main class="main" id="main">
+    <div class="topbar">
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="開啟選單"><svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div class="search">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="搜尋章節，例如：Q-learning、RMSSD、實驗流程" autocomplete="off" aria-label="搜尋章節">
+        <div class="results" id="results" hidden></div>
+      </div>
+    </div>
+    <div id="view"></div>
+  </main>
+</div>
+
+<script>
+var IMG={booth:"img/booth.jpg",polar:"img/polar.jpg",headphones:"img/headphones.jpg",pi5:"img/pi5.jpg",panel:"img/panel.jpg",led_b:"img/led_b.jpg",led_g:"img/led_g.jpg",led_r:"img/led_r.jpg",led_w:"img/led_w.jpg"};
+var ICON={
+ grid:'<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/>',
+ heart:'<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>',
+ pulse:'<path d="M3 12h4l2-5 4 10 2-5h6"/>',
+ cpu:'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>',
+ flask:'<path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3M7.5 15h9"/>',
+ check:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+ flag:'<path d="M5 21V4M5 4h12l-2.5 4L17 12H5"/>',
+ left:'<path d="m15 6-6 6 6 6"/>',
+ right:'<path d="m9 6 6 6-6 6"/>',
+ out:'<path d="M7 17 17 7M8.5 7H17v8.5"/>',
+ book:'<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19M9 7.5h6M9 11h4"/>',
+ play:'<path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/>',
+ pause:'<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor" stroke="none"/>'
+};
+function ic(n,cls){return '<svg class="ico'+(cls?' '+cls:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+ICON[n]+'</svg>'}
+
+var SECTIONS=[
+ {id:"motive",name:"研究動機",en:"Motivation",color:"pink",icon:"heart",intro:"從高中生的舒壓日常出發：同一套燈光與音樂，在不同人身上產生截然不同的生理反應。本單元說明研究問題、技術選擇、創新點與研究目的。",pages:["question","tech","innov","goals"]},
+ {id:"equip",name:"研究設備",en:"Equipment",color:"blue",icon:"cpu",intro:"所有硬體皆為市售消費級產品，確保系統可重現；材料總成本控制在新臺幣 12,000 元以內。",pages:["gear","photos","modules"]},
+ {id:"method",name:"研究方法",en:"Method",color:"purple",icon:"flask",intro:"閉環式生理回饋系統的架構、IoT 通訊、強化學習演算法、22 分鐘實驗流程、研究設計與資料驗證。",pages:["arch","iot","rl","flow","design","validate"]},
+ {id:"result",name:"實作成果",en:"Results",color:"green",icon:"check",intro:"系統已完成開發，並實際運行於 22 分鐘實驗流程中。本單元呈現控制面板、LED 通道測試與 Pilot 階段的觀察。",pages:["build","pilot"]},
+ {id:"plan",name:"後續規劃",en:"Next steps",color:"orange",icon:"flag",intro:"在相同的實驗 protocol 上擴充資料，並進行多角度統計分析；也想像這套系統未來可以長成什麼樣的產品。",pages:["future","pod","refs"]},
+ {id:"glossary",name:"名詞詳解",en:"Glossary",color:"blue",icon:"book",intro:"實驗中會用到的概念與名詞。點進每張卡片，用一段動畫看懂它在做什麼、在本研究裡扮演什麼角色。",pages:["g-hrv","g-rr","g-rmssd","g-ans","g-rl","g-qlearn","g-bandit","g-egreedy","g-reward","g-stroop","g-ectopic","g-window","g-edge","g-nof1"]}
+];
+
+var SCENE=(function(){
+ var leds="",k;for(k=0;k<13;k++){var y=58+k*15;leds+='<circle class="ledc" cx="146" cy="'+y+'" r="4"/><circle class="ledc" cx="654" cy="'+y+'" r="4"/>'}
+ var lb='fill="none" stroke="#9A9A93" stroke-width="1.2"';
+ return '<svg class="scene-svg" viewBox="0 0 800 360" role="img" aria-label="實驗場景動畫：受試者戴著耳機與胸前心率帶坐在半隔離艙中，兩側 LED 燈條隨介入階段亮起">'+
+ '<defs><radialGradient id="wash" cx="50%" cy="45%" r="60%"><stop id="washStop" offset="0" stop-color="#C8FFC8" stop-opacity=".9"/><stop id="washStop2" offset="1" stop-color="#C8FFC8" stop-opacity="0"/></radialGradient><filter id="glow" x="-200%" y="-10%" width="500%" height="120%"><feGaussianBlur stdDeviation="7"/></filter></defs>'+
+ '<rect width="800" height="360" fill="#F3F3EF"/><rect y="300" width="800" height="60" fill="#E7E7E1"/>'+
+ '<rect x="170" y="40" width="460" height="215" rx="6" fill="#D2D2CB"/>'+
+ '<path d="M260 40v215M400 40v215M540 40v215" stroke="#7E8B7C" stroke-width="5" opacity=".4"/>'+
+ '<polygon points="170,40 112,22 112,282 170,255" fill="#C4C4BC"/><polygon points="630,40 688,22 688,282 630,255" fill="#C4C4BC"/>'+
+ '<path d="M146 50v196M654 50v196" stroke="#A3A39B" stroke-width="12" stroke-linecap="round"/>'+
+ '<path id="ledGlow" d="M146 50v196M654 50v196" stroke="#C8FFC8" stroke-width="18" stroke-linecap="round" filter="url(#glow)" opacity="0"/>'+leds+
+ '<rect id="washRect" x="100" y="10" width="600" height="320" fill="url(#wash)" opacity="0"/>'+
+ '<rect x="180" y="222" width="440" height="12" rx="3" fill="#D8D2C4"/><rect x="190" y="234" width="8" height="66" fill="#9A9488"/><rect x="602" y="234" width="8" height="66" fill="#9A9488"/>'+
+ '<rect x="392" y="104" width="176" height="110" rx="7" fill="#FFFFFF" stroke="#CFCFC8" stroke-width="3"/><rect x="380" y="214" width="200" height="9" rx="3" fill="#59616D"/>'+
+ '<text id="scr" x="480" y="165" text-anchor="middle" dominant-baseline="middle" font-size="15" font-weight="700" fill="#4F4F4A">請靜坐</text>'+
+ '<rect x="584" y="198" width="40" height="24" rx="4" fill="#E9E7E3"/><circle cx="598" cy="210" r="7" fill="#2B2F36"/><circle id="piLed" cx="616" cy="204" r="2.6" fill="#3FB950"/>'+
+ '<path id="ble" d="M406 299 C480 300 560 272 600 226" fill="none" stroke="#2F6FD6" stroke-width="2.2" stroke-dasharray="4 7"/>'+
+ '<g id="body"><path d="M226 362 C228 296 246 262 278 252 L362 252 C394 262 412 296 414 362 Z" fill="#EFE9E0"/><path d="M234 299 L410 299" stroke="#262B33" stroke-width="7"/><rect x="384" y="289" width="26" height="20" rx="6" fill="#20242B"/><circle id="hb" cx="397" cy="299" r="3" fill="#E5534B"/></g>'+
+ '<g id="head"><rect x="307" y="226" width="26" height="30" rx="6" fill="#D9B8A0"/><circle cx="320" cy="200" r="38" fill="#2A211D"/><path d="M283 196 A37 37 0 0 1 357 196" fill="none" stroke="#F4F2EE" stroke-width="7"/><rect x="273" y="186" width="16" height="34" rx="7" fill="#F4F2EE"/><rect x="351" y="186" width="16" height="34" rx="7" fill="#F4F2EE"/></g>'+
+ '<g id="notes" font-size="24" fill="#C8FFC8" opacity="0"><text x="372" y="190">♪</text><text x="384" y="180">♫</text><text x="366" y="170">♪</text></g>'+
+ '<g font-size="13" fill="#4F4F4A"><text x="20" y="338">WS2812 LED 燈條（46 顆）</text><path d="M80 324 L140 238" '+lb+'/>'+
+ '<text x="186" y="94">SONY WH-CH520</text><path d="M240 100 L278 186" '+lb+'/>'+
+ '<text x="436" y="342">Polar H10 心率帶</text><path d="M462 328 L408 304" '+lb+'/>'+
+ '<text x="632" y="342">Raspberry Pi 5</text><path d="M676 328 L612 226" '+lb+'/>'+
+ '<text x="480" y="280" fill="#2F6FD6">BLE 逐拍 RR</text></g></svg>'
+})();
+var P={
+question:{t:"同一套介入，兩種相反的反應",d:"S01 的 RMSSD 上升 17.71 ms，S02 卻下降 12.36 ms：研究問題的起點。",big:"+17.71 / −12.36",min:2,kw:"RMSSD S01 S02 研究問題 動機",
+body:'<p class="lead">每晚寫完作業，我會關掉大燈、只留書桌上的小黃燈、播放自己的音樂清單。有同學需要大白燈與快節奏音樂，也有人需要完全的黑暗與白噪音。每個人的「最適放鬆組合」並不一樣。</p>'+
+'<div class="boxes"><div class="box"><small class="note">受試者 S01</small><div class="kpi" style="color:var(--green)">+17.71 ms</div><p>RMSSD 上升，放鬆效果顯著</p></div><div class="box"><small class="note">受試者 S02</small><div class="kpi" style="color:var(--orange)">−12.36 ms</div><p>RMSSD 下降，生理狀態更加緊繃</p></div></div>'+
+'<p class="note">兩人接受的是同一個介入：A2 自然沉浸（自然環境音 + 綠白光）。RMSSD（連續心跳間期差異均方根）上升代表身體更放鬆。</p>'+
+'<h2>研究問題</h2><div class="box"><p style="font-size:17px;opacity:1;font-weight:600">能不能設計一套系統，即時偵測使用者當下的生理回饋，動態演算出「此人、此時、此刻」最合適的放鬆輔助方案？</p></div>'},
+tech:{t:"為什麼是強化學習 + HRV + IoT",d:"三個技術領域各負責一件事：學會選擇、量化放鬆、閉環執行。",big:"RL + HRV + IoT",min:2,kw:"強化學習 HRV IoT Edge 技術",
+body:'<div class="boxes"><div class="box"><h3>強化學習 RL</h3><p>本質是透過「試誤」來優化決策：觀察使用者在不同狀態下的回饋，學習如何選擇動作以獲取最高長期獎勵，為每位使用者建立最合適的個人化介入路徑。</p></div>'+
+'<div class="box"><h3>心率變異度 HRV</h3><p>RMSSD 是學界泛用的副交感神經活性指標，上升代表身體進入放鬆狀態。Polar H10 胸式心率帶提供 ms 級精度的逐拍 RR 資料，適合研究等級 HRV 分析。</p></div>'+
+'<div class="box"><h3>物聯網 + 邊緣強化學習</h3><p>把感測器、運算單元、燈光、音訊整合成閉環系統：BLE 生理感測 + 藍牙音訊輸出，加上 GPIO 數位控制。為保護隱私，HRV 計算與 Q-learning 線上學習皆在本地完成。</p></div></div>'},
+innov:{t:"本研究的四個創新點",d:"應用情境、系統整合、方法學反思與隱私保護。",big:"4 項創新",min:2,kw:"創新 隱私 方法學 N-of-1 精準醫療",
+body:'<div class="boxes"><div class="box"><span class="n">01</span><h3>應用情境的創新</h3><p>把 RL 移植到「青少年舒壓與放鬆」這個真實生活問題，具備學校輔導室、休息室與家用部署的可行性。</p></div>'+
+'<div class="box"><span class="n">02</span><h3>系統整合的創新</h3><p>在單一 Raspberry Pi 5 上同步整合 BLE 與藍牙音訊兩種無線協定，加上 GPIO 燈條控制，實現「感測—決策—執行」閉環自動化。</p></div>'+
+'<div class="box"><span class="n">03</span><h3>方法學的反思</h3><p>從 Pilot 資料觀察到「行為-生理脫鉤」，將 reward 由「相對 stress」改為「相對 baseline」，定位從「壓力舒緩」轉為「放鬆增強」。</p></div>'+
+'<div class="box"><span class="n">04</span><h3>隱私保護設計</h3><p>所有 HRV 與行為資料都在 Pi 5 本地處理、不上雲端；搭配傳輸、儲存、系統、治理四層資料安全設計。</p></div></div>'+
+'<p class="lead">這些創新結合針對個人量身打造的 N-of-1 方法與適應性試驗設計，呼應精準醫療「因人而異」的精神。</p>'},
+goals:{t:"四項具體研究目的",d:"系統實作、偵測模型、資料驗證、方法修正。",big:"4 項目的",min:2,kw:"研究目的 目標",
+body:'<div class="boxes"><div class="box"><span class="n">目的 1</span><h3>系統實作</h3><p>整合 Polar H10、Raspberry Pi 5、WS2812 LED、SONY WH-CH520 的 IoT 即時生理回饋系統，具 22 分鐘 session 自動化執行能力，運算於 Pi 5 本地完成。</p></div>'+
+'<div class="box"><span class="n">目的 2</span><h3>偵測模型</h3><p>4-arm Bandit 模型以 RMSSD 變化量為獎勵，透過 Q-learning 在 10 輪實驗內平衡「嘗試新方案」與「選擇最有感方案」，找出個人最適音光組合。</p></div>'+
+'<div class="box"><span class="n">目的 3</span><h3>資料驗證</h3><p>ectopic beat 過濾、60 秒滑動視窗 RMSSD、reward 計算、stress manipulation 判定、quality grading 等完整驗證機制。</p></div>'+
+'<div class="box"><span class="n">目的 4</span><h3>方法修正</h3><p>Stroop 於校園情境壓力誘發成功率僅 20%（1/5），獎勵改以受測者「日常基準」為比照，由被動「壓力舒緩」優化為主動「放鬆增強」。</p></div></div>'},
+gear:{t:"設備、IoT 協定與器材一覽",d:"感測、運算、燈光、音訊與壓力誘發任務的完整清單。",big:"< NT$12,000",min:2,kw:"設備 器材 Polar Raspberry WS2812 SONY BoM",
+body:'<div class="tblwrap"><table><thead><tr><th>類別</th><th>名稱 / 型號</th><th>用途說明</th></tr></thead><tbody>'+
+'<tr><td>感測模組</td><td>Polar H10 胸式心率帶</td><td>透過 BLE 傳輸 RR 間期（ms 級精度）</td></tr>'+
+'<tr><td>中央運算</td><td>Raspberry Pi 5（8GB）</td><td>BLE 接收、線上 RL 決策、硬體控制（Edge RL 主機）</td></tr>'+
+'<tr><td>輸出—燈光</td><td>WS2812（NeoPixel）RGB LED 燈條，46 顆</td><td>Pi GPIO D10 單線控制</td></tr>'+
+'<tr><td>輸出—音訊</td><td>SONY WH-CH520 藍牙耳罩式耳機</td><td>藍牙 A2DP 傳輸；DSEE、50 hr 電力、147 g</td></tr>'+
+'<tr><td>壓力誘發</td><td>自製 Stroop 色字干擾測驗</td><td>校準階段自適應難度、正式測試固定難度</td></tr>'+
+'<tr><td>通訊整合</td><td>BLE + 藍牙音訊（A2DP）+ GPIO</td><td>兩種無線協定 + GPIO，實現感測—決策—執行閉環</td></tr>'+
+'<tr><td>系統與語言</td><td>Raspberry Pi OS 64-bit / Python 3.11</td><td>bleak、PySide6、pygame</td></tr>'+
+'<tr><td>AI 輔助工具</td><td>ChatGPT、Google Gemini、Antigravity、Anthropic Claude</td><td>程式撰寫、debug 協助、文獻摘要、文書修飾</td></tr></tbody></table></div>'},
+photos:{t:"硬體實物",d:"實驗艙、心率帶、耳機與樹莓派的實際照片。",img:"polar",min:1,kw:"照片 硬體 實物",
+body:'<div class="figs"><figure><img src="'+IMG.booth+'" alt="螢幕、鍵盤、滑鼠與灰色隔板圍成的半隔離艙"><figcaption>螢幕、鍵盤、滑鼠與半隔離艙</figcaption></figure>'+
+'<figure><img src="'+IMG.polar+'" alt="Polar H10 胸式心率帶"><figcaption>Polar H10 胸式心率帶</figcaption></figure>'+
+'<figure><img src="'+IMG.headphones+'" alt="SONY WH-CH520 白色藍牙耳罩耳機"><figcaption>SONY WH-CH520 藍牙耳罩耳機</figcaption></figure>'+
+'<figure><img src="'+IMG.pi5+'" alt="Raspberry Pi 5 與散熱風扇外殼"><figcaption>Raspberry Pi 5 樹莓派 8GB</figcaption></figure></div>'},
+modules:{t:"8 個 Python 模組，共 2,969 行",d:"從 GUI、session 控制到 LED 與音訊的模組分工。",big:"2,969 行",min:2,kw:"軟體 模組 Python 程式",
+body:'<div class="tblwrap"><table><thead><tr><th>模組</th><th class="num" style="text-align:right">行數</th><th>主要職責</th></tr></thead><tbody>'+
+[["gui_dashboard.py","1,168","PySide6 主 GUI；啟動 session、即時 HRV 顯示、Stroop 介面"],["main_session.py","455","22 分鐘 session 主控制器；依時間軸調度各階段事件"],["session_logger.py","668","資料 I/O 與 RMSSD / reward 計算；每場產出 11 個 CSV / JSON"],["rl_agent.py","253","Q-learning bandit；ε-greedy 三階段排程；Q-table 持久化"],["ble_reader.py","156","Polar H10 BLE 連線、斷線重連、RR callback 派送"],["actuator.py","82","Action → 硬體動作翻譯；同步控制燈光與音訊"],["led_control.py","118","WS2812 LED 控制（GPIO + neopixel + 30 ms 線性插值）"],["audio_player.py","69","pygame.mixer 音訊播放與 fade 控制（藍牙音訊）"]].map(function(r){return '<tr><td><code>'+r[0]+'</code></td><td class="num" style="text-align:right">'+r[1]+'</td><td>'+r[2]+'</td></tr>'}).join("")+
+'</tbody></table></div><p class="note">在 AI 輔助工具支援下完成系統設計、模組切分、程式撰寫、debug 與多輪整合測試。</p>'},
+arch:{t:"閉環式生理回饋：四個層次",d:"感測、運算、決策、執行四層形成完整回饋迴圈。",big:"4 層閉環",min:2,kw:"架構 閉環 感測 運算 決策 執行",
+body:'<p class="lead">系統根據使用者的即時 HRV 反應動態調整音樂與燈光，並從每一次介入後的 HRV 變化中學習，讓後續介入越來越個人化。</p>'+
+'<div class="layers"><div class="layer c-green"><b>執行層 Actuation</b><span>GPIO D10 控制 WS2812 燈條（色溫、亮度）與 pygame 音訊播放器（經 A2DP）同步切換；背景 thread 每 30 ms 線性插值，完成 5 秒 fade in/out。</span></div>'+
+'<div class="layer c-orange"><b>決策層 Decision</b><span>4-arm Q-learning bandit 在每場 T = 8 分鐘決策點選擇 A1–A4，依 ε-greedy 三階段排程運作。</span></div>'+
+'<div class="layer c-blue"><b>運算層 Computation</b><span>Pi 5 上的 Python 主程式計算 60 秒滑動視窗 RMSSD，執行 phase 切分、ectopic beat 過濾等邊緣運算。</span></div>'+
+'<div class="layer c-pink"><b>感測層 Sensing</b><span>Polar H10 以藍牙低能耗（BLE）逐拍上傳 RR 間期至 Raspberry Pi 5。</span></div></div>'+
+'<p class="note">資料由感測層往上流動到執行層；介入後的 HRV 變化再回饋給 RL agent，讓系統「學會」哪一個介入對使用者最有效。全部運算於 Raspberry Pi 5 本地完成，無雲端依賴。</p>'},
+iot:{t:"IoT 多協定通訊與邊緣運算",d:"兩種無線協定 + GPIO，所有 HRV 與行為資料皆於本地處理。",img:"pi5",min:3,kw:"IoT BLE A2DP GPIO 邊緣運算 斷線 asyncio",
+body:'<div class="hub"><div class="box c-pink"><span class="proto">BLE</span><h3>Polar H10 心率帶</h3><p>逐拍 RR 間期（ms 級精度）；bleak 非同步接收，事件驅動 callback</p></div>'+
+'<div class="box center"><h3 style="font-size:22px">Raspberry Pi 5</h3><p>中央運算 / Edge RL</p><p>RL 決策、HRV 計算皆於本地完成，不上雲端</p></div>'+
+'<div class="box c-orange"><span class="proto">GPIO D10</span><h3>WS2812 LED 燈條</h3><p>46 顆、GRB 色序、預設亮度 20%；Adafruit neopixel 函式庫</p></div>'+
+'<div class="box c-green"><span class="proto">本地 USB</span><h3>PySide6 GUI</h3><p>Stroop 任務 + 即時 HRV 顯示</p></div>'+
+'<div class="box c-purple"><span class="proto">藍牙 A2DP</span><h3>SONY WH-CH520</h3><p>4 種環境音樂 A1–A4；PulseAudio + pygame.mixer，5 秒 fade</p></div></div>'+
+'<h2>邊緣運算與穩定性設計</h2><div class="boxes"><div class="box"><h3>為什麼選 Edge RL</h3><ul><li>隱私保護：HRV 與 Stroop 屬敏感生理／心理資料</li><li>延遲性：RL 決策需在 T = 8 分鐘準時觸發</li><li>可部署：Pi 5 約 NT$4,895，可在學校或家中獨立運作</li></ul></div>'+
+'<div class="box"><h3>異步事件處理</h3><p>BLE 接收、Stroop GUI、LED 控制、音訊播放需同時運作，採 asyncio + threading 混合模型：bleak 在獨立 async loop，GUI 在主 thread，RL 與資料寫入在 worker thread。</p></div>'+
+'<div class="box"><h3>斷線恢復機制</h3><ul><li>自動重連：未找到設備 5 秒、連線失敗 3 秒、錯誤 3 秒</li><li>斷線期間 session 計時器自動暫停</li><li>連線品質低於 80% → data_valid = false，Q-table 不更新</li></ul></div></div>'},
+rl:{t:"Q-learning Bandit 與 Reward 設計",d:"四種音光 Action、更新規則、ε-greedy 三階段排程與 reward 公式重定義。",big:"α = 0.3",min:4,kw:"強化學習 Q-learning bandit epsilon greedy reward action A1 A2 A3 A4",
+body:'<h2>Action Space：四種音光組合</h2><div class="swatches">'+
+[["A1 專注鎮定","rgb(255,180,50)","暖橘 (255, 180, 50)","亮度 50%","focus_calm.mp3・低頻穩定背景音"],["A2 自然沉浸","rgb(200,255,200)","綠白 (200, 255, 200)","亮度 70%","nature.mp3・自然環境音（雨、鳥）"],["A3 能量流動","rgb(180,220,255)","冷白藍 (180, 220, 255)","亮度 80%","energy.mp3・中等節奏律動音"],["A4 暗光深層","rgb(42,14,8)","暗紅 (20, 5, 0)","亮度 10%","singing_bowl.mp3・頌缽冥想音"]].map(function(a){return '<div class="sw"><i style="background:'+a[1]+'"></i><div><b>'+a[0]+'</b><span>'+a[2]+'・'+a[3]+'</span><span class="note">'+a[4]+'</span></div></div>'}).join("")+'</div>'+
+'<h2>為什麼用 Bandit 形式</h2><p class="lead">每人僅 10 場 session 的小樣本下，傳統具狀態空間的 Q-learning 易面臨 Q-table 稀疏而學習失效；Bandit 雖簡化，卻專注於預測當下最佳 Action，在有限數據下收斂性更佳。</p>'+
+'<div class="formula">Q(a) ← Q(a) + α × (R − Q(a))，α = 0.3</div>'+
+'<h2>ε-greedy 三階段排程</h2><div class="chips"><div class="box"><div class="srow"><span class="tint c-blue">S1</span><span class="tint c-blue">S2</span></div><h3>forced_base</h3><p>強制 A2 為控制基線，Q-table 不更新；受試者熟悉流程的緩衝期。</p></div>'+
+'<div class="box"><div class="srow"><span class="tint c-orange">S3</span><span class="tint c-orange">S4</span><span class="tint c-orange">S5</span><span class="tint c-orange">S6</span></div><h3>forced_explore</h3><p>依固定順序 A1 → A2 → A3 → A4 強制探索，確保每個 arm 至少有一次經驗。</p></div>'+
+'<div class="box"><div class="srow"><span class="tint c-green">S7</span><span class="tint c-green">S8</span><span class="tint c-green">S9</span><span class="tint c-green">S10</span></div><h3>ε-greedy 利用期（ε = 0.2）</h3><p>20% 機率隨機探索，80% 機率選擇 Q 值最大的 arm。</p></div></div>'+
+'<h2>Reward 公式重定義</h2><div class="boxes"><div class="box"><small class="note">原始公式</small><div class="formula" style="border-color:var(--muted)">R = RMSSD_intervention − RMSSD_stress</div><p>預設「壓力期 RMSSD 必然降低」，但 pilot 發現 Stroop 在校園情境誘發成功率僅 20%（1/5）。</p></div>'+
+'<div class="box"><small class="note">新公式（分析層）</small><div class="formula">R = RMSSD_intervention − RMSSD_baseline</div><p>不依賴壓力誘發是否成功，reward 的物理意義穩定；定位由「壓力舒緩」轉為「放鬆增強」。</p></div></div>'+
+'<p class="note">程式即時運行時，Q-table 訓練訊號仍採舊公式；RMSSD_baseline 已完整記錄於 CSV，可事後以兩公式分別計算 reward 作為 sensitivity analysis 對照。</p>'},
+flow:{t:"22 分鐘 Session 實驗流程",d:"六個階段的動畫示意，以及各階段對應的感測、運算與 IoT 動作。",big:"22 min",min:3,kw:"實驗流程 動畫 session 22 分鐘 baseline stress Stroop phase 時程",
+body:'<div class="sim" id="sim"><div class="sim-top"><span id="clk">T = 00:00 / 22:00</span><span class="note">示意動畫・數值為模擬・約 44 秒播完一場</span><button class="sim-btn" id="simBtn" type="button">暫停</button></div>'+
+'<div class="sim-barwrap"><div class="sim-bar" id="simBar"></div><div id="ph"></div><span class="mk" style="left:36.36%">★ T8 決策</span><span class="mk" style="left:81.8%">★ T18 更新</span></div>'+
+'<div class="sim-panels"><div class="sp scene"><span class="t">實驗場景：灰色隔板半隔離艙</span>'+SCENE+'<div id="hp">耳機：靜音</div></div>'+
+'<div class="sp"><span class="t">感測 + 運算：Polar H10 → RMSSD</span><canvas id="ecg"></canvas><div class="vals"><div><small>心率</small><b id="hr">74 bpm</b></div><div><small>RMSSD（60 s 視窗）</small><b id="rm">46.0 ms</b></div></div></div>'+
+'<div class="sp"><span class="t">決策：4-arm Q-learning bandit</span><div id="qr"></div><div id="qs"></div></div></div>'+
+'<div class="sim-cap"><span id="pill">基線期</span><span id="ct"></span></div></div>'+
+'<h2>各階段對應</h2><div class="tblwrap"><table><thead><tr><th>階段</th><th>時間</th><th class="hide-sm">感測層</th><th>運算層</th><th>IoT 執行</th></tr></thead><tbody>'+
+[["Baseline 基線期","T0–T3・3 min","BLE 接收 RR","RMSSD 中位數（整段 3 min）","環境靜默"],["Stress 壓力誘發","T3–T6・3 min","BLE + Stroop GUI","RMSSD 平均（僅 T4–T6）","GUI 顯示題目，無音訊"],["Decision 決策","T6–T8・2 min","BLE 持續","★ T8 RL agent 選 action","準備切換"],["Adapt 介入適應","T8–T11・3 min","BLE 持續","RMSSD 監測（不計入 reward）","燈光切換、音訊 fade-in"],["Effective 有效介入","T11–T18・7 min","BLE 持續","RMSSD 中位數（7 min 主訊號）","介入穩定播放 7 分鐘"],["End 結束","T18–T22・4 min","BLE 持續","★ T18 計算 reward、更新 Q-table","音訊 fade-out、燈光復原"]].map(function(r){return '<tr><td><b>'+r[0]+'</b></td><td class="num" style="white-space:nowrap">'+r[1]+'</td><td class="hide-sm">'+r[2]+'</td><td>'+r[3]+'</td><td>'+r[4]+'</td></tr>'}).join("")+'</tbody></table></div>'+
+'<h2>兩個關鍵時序設計</h2><div class="boxes"><div class="box"><h3>RMSSD_stress 只取 T4–T6 的 120 秒</h3><p>而非整個 stress phase 180 秒，以排除剛進入 Stroop 任務時的注意力轉移（orienting response）。</p></div><div class="box"><h3>RMSSD_intervention 只取 T11–T18</h3><p>不含 adapt phase，以排除 LED 30 ms 線性插值與音訊 fade 的轉場過渡污染主訊號。</p></div></div>'},
+design:{t:"N-of-1 個案系列與資料安全",d:"每位受試者進行 10 場 session 的個案系列設計，以及三層資料保護。",big:"N-of-1",min:3,kw:"研究設計 N-of-1 受試者 倫理 知情同意 資料安全 隱私 BFI-10 VAS",
+body:'<div class="boxes"><div class="box"><div class="kpi" style="color:var(--accent)">N-of-1</div><p>健康青少年女性，16–18 歲在校學生</p></div><div class="box"><div class="kpi" style="color:var(--accent)">10 場 / 人</div><p>每位受試者進行 10 場 session，觀察個人化的收斂過程</p></div><div class="box"><div class="kpi" style="color:var(--accent)">VAS 0–100</div><p>每場後的最小化主觀放鬆評估</p></div></div>'+
+'<div class="box"><ul><li>受試者與父母／監護人共同簽署知情同意書；任一階段皆可無條件退出，並要求刪除已蒐集資料。</li><li>事前向學校輔導室與老師報請審查：介入屬日常生活刺激、無侵入性、無藥物或醫療器材使用。</li><li>每場前 Stroop 校準建立個別認知能力基線；第 1 場填寫 BFI-10 簡短人格量表。</li><li>實驗於校內專屬空間進行，以灰色隔板圍成半隔離艙降低環境干擾。</li></ul></div>'+
+'<p class="note">為保護受試者隱私，本網站不公開實驗執行時的人物照片。</p>'+
+'<h2>資料安全：三層保護</h2><div class="boxes"><div class="box"><h3>傳輸層</h3><p>BLE 連線範圍小於 10 m，僅交換 RR 間期數據，無個人識別資訊傳輸；LED 由 Pi GPIO 控制，無網路通訊。</p></div><div class="box"><h3>儲存層</h3><p>11 個 CSV / JSON 資料檔以受試者編碼（S01、S02⋯）儲存，不含真實姓名；編碼對應表由研究者單獨保管於離線環境。</p></div><div class="box"><h3>治理層</h3><p>原始資料保留至實驗結束一年內，由指導老師見證下刪除；資料使用範圍限於本研究及後續學術發表。</p></div></div>'},
+validate:{t:"九個資料驗證關卡",d:"每個關卡都有明確的設計理由，而非任意設定。",big:"9 關卡",min:3,kw:"驗證 ectopic RMSSD quality validity 資料檔 CSV",
+body:'<div class="tblwrap"><table><thead><tr><th>驗證關卡</th><th>機制</th><th>設計理由</th></tr></thead><tbody>'+
+[["Ectopic beat 過濾","|ΔRR| > 200 ms → 滑動視窗中位數取代","依臨床標準排除異常心跳所造成的 RMSSD 計算誤差"],["RMSSD 計算窗","60 秒滑動視窗","對齊 Task Force 1996 short-term HRV 標準"],["RMSSD_baseline","phase 內 60 s 樣本中位數","基線期穩定，中位數對偶發 outlier 較穩健"],["RMSSD_stress","T4–T6 間 120 s 滑動視窗均值","排除剛進入 Stroop 時的 orienting response 干擾"],["RMSSD_intervention","T11–T18 60 s 樣本中位數","排除 adapt phase 的轉場過渡污染主訊號"],["Stress manipulation 閾值","ratio > 10%（嚴格大於）","相對比率對基線不同的個體更公平；對應文獻常見有效誘發閾值"],["Reward 主訊號 + baseline 紀錄","主訊號 intervention − stress；baseline 記錄於 session_log.csv","後續 sensitivity analysis 可比較兩種 framework"],["Quality grading","A / B / C / D 自動分級","綜合 ectopic 比率、斷線時長、stress 是否成功"],["Data validity flag","valid_rr / total_rr ≥ 80%","低於此值則 Q-table 不更新，避免污染 RL 學習"]].map(function(r){return '<tr><td><b>'+r[0]+'</b></td><td>'+r[1].replace(">","&gt;")+'</td><td>'+r[2]+'</td></tr>'}).join("")+'</tbody></table></div>'+
+'<p class="note">每場 session 自動產出 11 個資料檔，包含 raw_rr.csv、session_log.csv、qtable_log.csv、qtable_before / after.json、decision_log.csv、stress_result.csv、stress_zscore.csv、calibration_log.csv、calibration_summary.csv、pause_events.csv。</p>'},
+build:{t:"實驗控制面板與 LED 通道測試",d:"PySide6 控制面板與 WS2812 燈條 RGB／白光測試。",img:"panel",min:1,kw:"控制面板 GUI LED 測試 成果",
+body:'<figure><img class="contain" src="'+IMG.panel+'" alt="實驗控制面板截圖：BLE 連線、Session 管理、音樂播放、燈光控制與系統日誌"><figcaption>實驗控制面板：BLE 連線、Session 管理、數據歷史、音樂播放（A1–A4）、燈光一鍵切換與系統日誌</figcaption></figure>'+
+'<div class="figs"><figure><img src="'+IMG.led_b+'" alt="LED 燈條藍色通道測試"><figcaption>LED 通道測試：B 藍</figcaption></figure><figure><img src="'+IMG.led_g+'" alt="LED 燈條綠色通道測試"><figcaption>LED 通道測試：G 綠</figcaption></figure><figure><img src="'+IMG.led_r+'" alt="LED 燈條紅色通道測試"><figcaption>LED 通道測試：R 紅</figcaption></figure><figure><img src="'+IMG.led_w+'" alt="LED 燈條白光通道測試"><figcaption>LED 通道測試：W 白</figcaption></figure></div>'},
+pilot:{t:"Pilot 階段：兩個可行性訊號",d:"Pilot 資料顯示跨個案差異，以及校園情境的壓力誘發成功率僅 20%。",big:"20%",min:2,kw:"pilot 初步 觀察 成功率 Prinsloo 脫鉤",
+body:'<p class="note">本節呈現方法層次的描述性訊號，作為個人化方法可行性的依據。</p>'+
+'<h2>一、跨個案差異：同一個 A2，方向相反</h2><div class="box"><div class="diverge">'+
+'<div class="drow"><b>S01</b><span></span><span class="axis"></span><span style="display:flex;align-items:center"><i class="dbar" style="width:100%;background:var(--green);border-radius:0 6px 6px 0;max-width:calc(100% - 140px)"></i><span class="lbl" style="color:var(--green)">+17.71 ms 放鬆增強</span></span></div>'+
+'<div class="drow"><b>S02</b><span style="display:flex;align-items:center;justify-content:flex-end"><span class="lbl" style="color:var(--orange)">−12.36 ms 更緊繃</span><i class="dbar" style="width:70%;background:var(--orange);border-radius:6px 0 0 6px"></i></span><span class="axis"></span><span></span></div></div>'+
+'<p>S01 的 baseline RMSSD 約 70 ms（高 HRV 族群），S02 約 28–47 ms（中 HRV 族群），兩人對 A2 自然沉浸與 A1 專注鎮定的反應截然不同。個體差異無法以單一通用方法處理，這正是 RL bandit 在線上為個別使用者偵測最適 action 的設計目的。</p></div>'+
+'<h2>二、壓力誘發成功率僅 20%（1/5）</h2><div class="box"><p>Stroop 任務在校園情境並不總能誘發 RMSSD 下降。這與 Prinsloo et al.（2011）等文獻吻合：年輕女性、HRV 基線偏高的族群，在實驗室誘發 paradigm 中常出現「行為層有壓力反應，生理層卻鈍化或反向」的脫鉤現象，顯示 Stroop 在校園情境的生態效度受限，因此促成 reward 公式重定義。</p></div>'},
+future:{t:"後續方法與執行規劃",d:"擴充資料、LMM 統計、人格互動分析與收斂視覺化。",big:"4 個方向",min:2,kw:"後續 規劃 LMM BFI-10 統計 收斂",
+body:'<div class="boxes"><div class="box"><span class="n">步驟 1</span><h3>擴充資料規模</h3><p>以相同的 22 分鐘 session 時序、Stroop 任務與 4-arm action space 擴充受試者與場次，確保資料可跨受試者比較。</p></div>'+
+'<div class="box"><span class="n">步驟 2</span><h3>主要 outcome 推論統計</h3><p>以新公式 reward 為主要 outcome，於累積的 session 資料上執行線性混合效應模型（LMM），檢驗個別化 Q-table 收斂之顯著性與效果量；以舊公式作 sensitivity analysis。</p></div>'+
+'<div class="box"><span class="n">步驟 3</span><h3>BFI-10 人格 × 介入互動</h3><p>檢視 extraversion、neuroticism 等個人特質如何調節 RL 收斂行為與個別最適 action 選擇。</p></div>'+
+'<div class="box"><span class="n">步驟 4</span><h3>個別化收斂模式視覺化</h3><p>呈現每位受試者各自的 Q-table 演進軌跡與收斂曲線，作為「同一系統對不同個體之適應性」的具體展示。</p></div></div>'},
+pod:{t:"未來產品想像：會讀心跳的舒壓艙",d:"戴上手腕心率帶、轉旋鈕，剩下交給五感：燈光、音樂、香氛與按摩依心跳自動調整。",big:"舒壓艙",min:3,kw:"未來 產品 想像 舒壓艙 放鬆艙 概念 拆解 爆炸圖 漫畫 香氛 按摩 旋鈕 手腕心率帶",
+body:'<p class="lead">把實驗裡的隔板、心率帶、LED 燈條與耳機，整合成一座傾斜的蛋形舒壓艙：戴上手腕心率帶、躺進艙內、轉動扶手旋鈕，主控板持續計算 RMSSD，自動調整燈光、音樂、香氛與按摩。</p><p class="note">概念想像，非現有產品；圖中數值為示意。</p>'+
+'<h2>舒壓艙怎麼用</h2><div class="boxes">'+[["1","戴上手腕心率帶","走到艙旁先戴好心率帶，系統用藍牙自動連線。"],["2","躺進艙內，轉旋鈕開始","轉動扶手旋鈕選擇自動或手動模式，狀態燈亮起。"],["3","依心跳啟動五感","主控板持續計算 RMSSD，調整燈光、音樂、香氛與按摩。"],["4","結束並記錄","狀態燈顯示這次的放鬆變化；系統記下哪個情境最有效，下次優先使用。"]].map(function(r){return '<div class="box"><span class="n">步驟 '+r[0]+'</span><h3>'+r[1]+'</h3><p>'+r[2]+'</p></div>'}).join("")+'</div>'+
+'<div class="head"><h2>想像漫畫：下班後的十五分鐘</h2><button class="btn-line" id="podPlay" type="button">暫停漫畫</button></div>'+
+'<div class="comic"><svg id="podComic" viewBox="0 0 960 600" role="img" aria-label="四格漫畫：一、上班族晚上八點下班，疲憊緊繃；二、戴上手腕心率帶、躺進舒壓艙、轉動旋鈕；三、穹頂關上，AI 選擇 A2，燈光、音樂、香氛與按摩自動啟動；四、十五分鐘後睡著，放鬆紀錄顯示 RMSSD 上升">'+comicSVG()+'</svg></div>'+
+'<div class="head"><h2>3D 拆解圖</h2><div class="ex-ctl"><span>組合</span><input id="podSlider" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="拆解程度"><span>拆解</span><button class="btn-line" id="podAuto" type="button">停止自動</button></div></div>'+
+'<div class="panel exwrap"><svg id="podEx" class="iso-svg" viewBox="-320 -640 820 880" role="img" aria-label="舒壓艙 3D 拆解圖：透明穹頂、LED 燈帶、喇叭與香氛出口、躺椅內襯與扶手旋鈕、按摩模組、蛋形艙體、主控板、十字底座，另有藍牙手腕心率帶"></svg></div>'+
+'<h2>零件與目前系統的對應</h2><div class="tblwrap"><table><thead><tr><th>零件</th><th>對應目前實驗系統</th><th>在舒壓艙裡的角色</th></tr></thead><tbody>'+
+[["① 透明穹頂","灰色隔板半隔離艙","可開合，遮光又有包覆感"],["② LED 燈帶","WS2812 LED 燈條（46 顆）","沿艙口一圈，依情境切換色溫與亮度"],["③ 喇叭 ×2・香氛出口","SONY WH-CH520 藍牙耳機","不用戴耳機也能聽音樂；新增香氛"],["④ 躺椅內襯・扶手旋鈕","GUI 控制面板","轉旋鈕選自動或手動，狀態燈顯示模式"],["⑤ 按摩模組","—（新增）","背部滾輪與腿部氣囊"],["⑥ 蛋形艙體","書桌與椅子","傾斜包覆式躺姿，姿勢更穩定"],["⑦ 主控板","Raspberry Pi 5","持續計算 RMSSD，本地 Edge RL，資料不上雲端"],["⑧ 十字底座","—","四腳支撐，穩定不晃動"],["手腕心率帶","Polar H10 胸式心率帶","藍牙連線，戴在手腕更方便"]].map(function(r){return '<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>'}).join("")+'</tbody></table></div>'},
+refs:{t:"參考資料",d:"與本研究核心方法直接相關的關鍵文獻。",big:"7 篇文獻",min:1,kw:"參考資料 文獻 references",
+body:'<div class="box"><ul style="gap:12px">'+
+['<b>[核心]</b> Task Force of the European Society of Cardiology and the North American Society of Pacing and Electrophysiology (1996). Heart rate variability: standards of measurement, physiological interpretation, and clinical use. <i>Circulation, 93</i>(5), 1043–1065.',
+'<b>[核心]</b> Sutton, R. S., &amp; Barto, A. G. (2018). <i>Reinforcement Learning: An Introduction</i> (2nd ed.). MIT Press.',
+'<b>[核心]</b> Prinsloo, G. E., Rauch, H. G. L., Lambert, M. I., Muench, F., Noakes, T. D., &amp; Derman, W. E. (2011). The effect of short duration heart rate variability (HRV) biofeedback on cognitive performance during laboratory induced cognitive stress. <i>Applied Cognitive Psychology, 25</i>(5), 792–801.',
+'<b>[核心]</b> Lehrer, P. M., &amp; Gevirtz, R. (2014). Heart rate variability biofeedback: how and why does it work? <i>Frontiers in Psychology, 5</i>, 756.',
+'Stroop, J. R. (1935). Studies of interference in serial verbal reactions. <i>Journal of Experimental Psychology, 18</i>(6), 643–662.',
+'<b>[核心]</b> Schork, N. J. (2015). Personalized medicine: Time for one-person trials. <i>Nature, 520</i>(7549), 609–611.',
+'Polar Electro Oy. Polar H10 user manual &amp; technical specifications. Polar Electro Oy.'].map(function(x){return '<li>'+x+'</li>'}).join("")+'</ul></div>'}
+};
+var GL={
+"g-hrv":{n:"HRV 心率變異度",c:"HRV",s:"連續心跳之間時間間隔的變化程度。",def:"連續心跳之間時間間隔的變化程度。心跳並不是完全等距的，間隔會隨呼吸與自律神經的活動而改變。",role:"本研究以 HRV 作為身體放鬆程度的量化基礎：間隔的變化越大，通常代表副交感神經越活躍、身體越放鬆。"},
+"g-rr":{n:"RR 間期",c:"RR",s:"相鄰兩個 R 波之間的時間（毫秒）。",def:"心電圖中相鄰兩個 R 波（每次心跳最高的尖峰）之間的時間，單位是毫秒（ms）。",role:"Polar H10 胸式心率帶透過 BLE 逐拍傳送 RR 間期給 Raspberry Pi 5，是所有 HRV 計算的原始資料。"},
+"g-rmssd":{n:"RMSSD",c:"RMSSD",s:"連續心跳間期差異的均方根。",def:"Root Mean Square of Successive Differences，連續心跳間期差異的均方根：先算相鄰 RR 間期的差，平方後取平均，再開根號。",role:"本研究的主要生理指標，以 60 秒滑動視窗計算；介入前後的 RMSSD 變化就是 AI 的獎勵來源。",x:"RMSSD = √( Σ (RRᵢ₊₁ − RRᵢ)² ÷ N )"},
+"g-ans":{n:"交感與副交感神經",c:"自律神經",s:"像蹺蹺板一樣此消彼長的兩套神經系統。",def:"自律神經分為交感神經（戰或逃、心跳加快）與副交感神經（休息與修復）。兩者此消彼長，就像一個蹺蹺板。",role:"RMSSD 反映副交感神經的活性；RMSSD 上升，代表身體正在進入放鬆狀態。"},
+"g-rl":{n:"強化學習",c:"RL",s:"讓 AI 透過試誤，學會長期最有利的選擇。",def:"讓 AI 透過「試誤」學習的方法：做出動作、觀察環境回饋的獎勵，逐步學會長期最有利的選擇。",role:"AI 每場選擇一種音光組合（動作），以介入後的 RMSSD 變化作為獎勵，替每位使用者學出個人化的放鬆方案。"},
+"g-qlearn":{n:"Q-learning",c:"Q(a)",s:"用 Q 值記錄每個動作有多好，並隨獎勵更新。",def:"強化學習的一種方法。替每個動作維護一個 Q 值，代表「選這個動作預期有多好」，每次拿到獎勵就把 Q 值往獎勵靠近一步。",role:"本研究採用簡化的 Q-learning：每場只更新被選中方案的 Q 值，學習率 α 固定為 0.3。",x:"Q(a) ← Q(a) + α × (R − Q(a))，α = 0.3"},
+"g-bandit":{n:"多臂老虎機 Bandit",c:"Bandit",s:"不知道哪台機器最好，只能邊試邊學。",def:"經典的決策問題：面前有好幾台吃角子老虎機，不知道哪一台的獎勵最高，只能一邊拉、一邊記錄結果。",role:"四種音光組合 A1–A4 就是四台機器。每人只有 10 場的小樣本下，Bandit 形式比完整狀態空間的 Q-learning 更容易收斂。"},
+"g-egreedy":{n:"ε-greedy 策略",c:"ε",s:"在探索新方案與利用最佳方案之間取平衡。",def:"在「探索」與「利用」之間取得平衡的策略：以 ε 的機率隨機嘗試其他方案，其餘時間選擇目前 Q 值最高的方案。",role:"本研究第 7–10 場使用 ε = 0.2；第 1–2 場固定 A2 當控制基線，第 3–6 場依序探索 A1 → A4。"},
+"g-reward":{n:"Reward 獎勵",c:"R",s:"告訴 AI 這次的選擇好不好的分數。",def:"強化學習中評價一次動作好壞的數值。獎勵越高，AI 就越傾向再次選擇這個動作。",role:"原始公式為「介入期 RMSSD − 壓力期 RMSSD」；修正後的分析公式改為「介入期 RMSSD − 日常基線」，不受壓力誘發成功與否影響。"},
+"g-stroop":{n:"Stroop 色字測驗",c:"Stroop",s:"說出字的顏色而不是字義，製造輕度壓力。",def:"畫面顯示代表顏色的字，但字的墨水顏色不同，受試者要說出墨水的顏色。字義與顏色互相衝突，造成認知負荷。",role:"本研究在第 3–6 分鐘用 Stroop 誘發輕度壓力；Pilot 觀察到校園情境的誘發成功率約 20%，因此修正了 reward 公式。"},
+"g-ectopic":{n:"Ectopic beat 過濾",c:"Ectopic",s:"把偶發的異常心跳挑出來並修正。",def:"異位搏動（ectopic beat）是偶發、不規則的心跳，會讓 RR 間期突然變長或變短。",role:"相鄰 RR 差超過 200 ms 時判定為異常，改用滑動視窗的中位數取代，避免 RMSSD 被少數異常值拉偏。"},
+"g-window":{n:"60 秒滑動視窗",c:"60 s",s:"每次只看最近 60 秒的資料，持續更新。",def:"每次只取最近一段固定長度的資料來計算，視窗隨時間往前移動，結果也跟著持續更新。",role:"RMSSD 以 60 秒滑動視窗計算，對齊 1996 年 Task Force 的短時 HRV 標準。"},
+"g-edge":{n:"Edge RL 邊緣運算",c:"Edge",s:"AI 的運算都在裝置本地完成，不上雲端。",def:"把運算放在資料產生的裝置旁邊（邊緣）完成，而不是把資料傳到遠端的雲端伺服器。",role:"所有 HRV 計算與 Q-learning 都在 Raspberry Pi 5 本地完成：保護隱私、避免網路延遲，也能在學校或家中獨立運作。"},
+"g-nof1":{n:"N-of-1 個案研究",c:"N-of-1",s:"把一個人當作一個完整的實驗。",def:"以單一個人作為完整的實驗對象：同一個人重複多次，和自己比較，而不是取很多人的平均。",role:"每位受試者進行 10 場 session，找出屬於他的最佳放鬆方案，呼應精準醫療「因人而異」的精神。"}
+};
+function termBody(id){var T=GL[id];
+ return '<div class="vid"><canvas id="termCv" aria-label="'+T.n+'：動態圖像說明"></canvas><button class="vid-big" id="termBig" type="button" aria-label="播放動畫" hidden>'+ic("play")+'</button></div>'+
+ '<div class="vid-ctl"><button class="vid-play" id="termPlay" type="button" aria-label="暫停">'+ic("pause")+'</button><input id="termSeek" type="range" min="0" max="10" step="0.05" value="0" aria-label="動畫進度"><span class="vid-time" id="termTime">0:00</span></div>'+
+ '<div class="boxes"><div class="box"><h3>一句話定義</h3><p>'+T.def+'</p></div><div class="box"><h3>在本研究中</h3><p>'+T.role+'</p></div></div>'+(T.x?'<div class="formula">'+T.x+'</div>':'')}
+Object.keys(GL).forEach(function(id){var T=GL[id];P[id]={t:T.n,d:T.s,big:T.c,min:1,kw:T.n+" "+T.c+" 名詞 概念 詳解",body:termBody(id)}});
+var SEC_OF={};SECTIONS.forEach(function(s){s.pages.forEach(function(id){SEC_OF[id]=s})});
+var ORDER=[];SECTIONS.forEach(function(s){ORDER=ORDER.concat(s.pages)});
+
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||"null");localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+var visited=store("ahrv-visited")||{},favs=store("ahrv-favs")||{};
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+function pillHTML(s){return '<span class="pill tint c-'+s.color+'">'+ic(s.icon)+esc(s.name.toUpperCase())+'</span>'}
+function coverHTML(id){var p=P[id],s=SEC_OF[id];
+ var inner=p.img?'<img src="'+IMG[p.img]+'" alt="" loading="lazy">':'<span class="big">'+esc(p.big)+'</span>';
+ return '<div class="cover tint c-'+s.color+'">'+inner+'<button class="fav" type="button" data-fav="'+id+'" aria-pressed="'+(favs[id]?"true":"false")+'" aria-label="收藏「'+esc(p.t)+'」">'+ic("heart")+'</button></div>'}
+function cardHTML(id){var p=P[id],s=SEC_OF[id];
+ return '<article class="ccard">'+coverHTML(id)+pillHTML(s)+'<h3><a href="#'+id+'">'+esc(p.t)+'</a></h3><div class="track"><i style="width:'+(visited[id]?100:0)+'%"></i></div>'+
+ '<div class="mentor"><span class="av tint c-'+s.color+'">'+ic(s.icon)+'</span><span class="lbl"><b>'+esc(s.name)+'</b><small>'+(visited[id]?"已讀完・":"")+'閱讀約 '+p.min+' 分鐘</small></span></div></article>'}
+function rowHTML(id){var p=P[id],s=SEC_OF[id];
+ return '<tr><td><div class="lesson"><span class="av tint c-'+s.color+'">'+ic(s.icon)+'</span><span class="lbl"><b>'+esc(p.t)+'</b><small>'+esc(s.name)+'</small></span></div></td><td>'+pillHTML(s)+'</td><td class="hide-sm">'+esc(p.d)+'</td><td class="tc"><a class="go-btn" href="#'+id+'" aria-label="前往「'+esc(p.t)+'」">'+ic("out")+'</a></td></tr>'}
+
+var STARS='<svg class="stars" viewBox="0 0 460 200" preserveAspectRatio="xMaxYMid slice" aria-hidden="true"><g fill="#FFFFFF"><path opacity=".5" d="M330 18c3 44 14 60 58 64-44 4-55 20-58 64-3-44-14-60-58-64 44-4 55-20 58-64z"/><path opacity=".22" d="M170-10c2 30 10 42 40 45-30 3-38 15-40 45-2-30-10-42-40-45 30-3 38-15 40-45z"/><path opacity=".22" d="M440 120c2 30 10 40 40 43-30 3-38 13-40 43-2-30-10-40-40-43 30-3 38-13 40-43z"/><path opacity=".18" d="M230 140c2 26 8 34 34 37-26 3-32 11-34 37-2-26-8-34-34-37 26-3 32-11 34-37z"/></g></svg>';
+
+function home(){
+ var stats=[["method","modules","8 / 8 模組","系統開發"],["method","rl","4 種 Action","音光組合"],["method","validate","9 / 9 關卡","資料驗證"]];
+ var firstUnread=ORDER.filter(function(id){return !visited[id]});
+ var railIds=firstUnread.length?firstUnread.concat(ORDER.filter(function(id){return visited[id]})):ORDER;
+ return '<section class="banner"><div class="banner-txt"><span class="eyebrow">第二十五屆旺宏科學獎・資訊組・SA25-222</span><h1>讀懂身體狀態，<span class="dim">自動切換最適合的音樂與燈光</span></h1><p>A-HRV-RL：以心率變異度與強化學習打造的高中生個人化舒壓與放鬆 IoT 系統。</p><div class="btns"><a class="btn-dark" href="#flow">觀看實驗流程<span>'+ic("right")+'</span></a><a class="btn-line" href="#home" data-jump="video">45 秒概念影片</a></div></div><div class="banner-art">'+heroSVG()+'</div></section>'+
+ '<section class="stats">'+stats.map(function(x){var s=SECTIONS.filter(function(z){return z.id==x[0]})[0];return '<a class="stat" href="#'+x[1]+'"><span class="bubble tint c-'+s.color+'">'+ic(s.icon)+'</span><span><small>'+x[2]+'</small><b>'+x[3]+'</b></span>'+ic("right","go")+'</a>'}).join("")+'</section>'+
+ '<section style="display:flex;flex-direction:column;gap:14px" id="video"><div class="head"><h2>45 秒看懂實驗概念</h2><span class="note">動態圖像影片</span></div>'+
+ '<div class="vid"><canvas id="vidCv" aria-label="A-HRV-RL 實驗概念動態影片：問題、感測、決策、執行、閉環與研究規模"></canvas><button class="vid-big" id="vidBig" type="button" aria-label="播放影片">'+ic("play")+'</button></div>'+
+ '<div class="vid-ctl"><button class="vid-play" id="vidPlay" type="button" aria-label="播放">'+ic("play")+'</button><input id="vidSeek" type="range" min="0" max="45" step="0.05" value="0" aria-label="影片進度"><span class="vid-time" id="vidTime">00:00 / 00:45</span></div></section>'+
+ '<section style="display:flex;flex-direction:column;gap:14px"><div class="head"><h2>繼續閱讀</h2><div class="arrows"><button class="arw" type="button" data-rail="-1" aria-label="上一組">'+ic("left")+'</button><button class="arw solid" type="button" data-rail="1" aria-label="下一組">'+ic("right")+'</button></div></div>'+
+ '<div class="panel"><div class="rail" id="rail">'+railIds.map(cardHTML).join("")+'</div></div></section>'+
+ '<section style="display:flex;flex-direction:column;gap:14px"><div class="head"><h2>章節一覽</h2><a class="see" href="#" id="seeAll" role="button">查看全部</a></div>'+
+ '<div class="tblwrap"><table><thead><tr><th>章節</th><th>單元</th><th class="hide-sm">說明</th><th class="tc">前往</th></tr></thead><tbody id="lessonBody">'+ORDER.slice(0,5).map(rowHTML).join("")+'</tbody></table></div></section>'
+}
+function sectionPage(s){
+ return '<nav class="crumbs" aria-label="路徑"><a href="#home">總覽</a><span class="sep">›</span><span>'+esc(s.name)+'</span></nav>'+
+ '<section class="hero c-'+s.color+'">'+pillHTML(s)+'<h1>'+esc(s.name)+'</h1><p>'+esc(s.intro)+'</p><div class="meta"><span>'+s.pages.length+' 個章節</span><span>已讀 '+s.pages.filter(function(id){return visited[id]}).length+' / '+s.pages.length+'</span></div></section>'+
+ '<div class="cgrid">'+s.pages.map(cardHTML).join("")+'</div>'
+}
+function chapterPage(id){
+ var p=P[id],s=SEC_OF[id],i=s.pages.indexOf(id),prev=s.pages[i-1],next=s.pages[i+1];
+ var gi=ORDER.indexOf(id);if(!next&&ORDER[gi+1])next=ORDER[gi+1];
+ return '<nav class="crumbs" aria-label="路徑"><a href="#home">總覽</a><span class="sep">›</span><a href="#'+s.id+'">'+esc(s.name)+'</a><span class="sep">›</span><span>'+esc(p.t)+'</span></nav>'+
+ '<section class="hero c-'+s.color+'">'+pillHTML(s)+'<h1>'+esc(p.t)+'</h1><p>'+esc(p.d)+'</p><div class="meta"><span>第 '+(i+1)+' / '+s.pages.length+' 章</span><span>閱讀約 '+p.min+' 分鐘</span></div></section>'+
+ '<div class="body">'+p.body+'</div>'+
+ '<nav class="pager" aria-label="章節切換">'+(prev?'<a href="#'+prev+'"><small>‹ 上一章</small><b>'+esc(P[prev].t)+'</b></a>':'<a href="#'+s.id+'"><small>‹ 回到單元</small><b>'+esc(s.name)+'</b></a>')+
+ (next?'<a class="next" href="#'+next+'"><small>下一章 ›</small><b>'+esc(P[next].t)+'</b></a>':'<a class="next" href="#home"><small>回到 ›</small><b>總覽</b></a>')+'</nav>'
+}
+
+function renderNav(cur){
+ var top=cur=="home"?"home":(SEC_OF[cur]?SEC_OF[cur].id:cur);
+ var items=[{id:"home",name:"總覽",icon:"grid"}].concat(SECTIONS);
+ document.getElementById("nav").innerHTML=items.map(function(s){return '<a class="nav-item'+(top==s.id?' on':'')+'" href="#'+s.id+'"'+(top==s.id?' aria-current="page"':'')+' title="'+esc(s.name)+'">'+ic(s.icon)+'<span class="lbl">'+esc(s.name)+'</span></a>'}).join("");
+}
+var simStop=null;
+function route(){
+ var id=(location.hash||"#home").slice(1);
+ if(simStop){simStop();simStop=null}
+ var v=document.getElementById("view"),sec=SECTIONS.filter(function(s){return s.id==id})[0];
+ if(P[id]){v.innerHTML=chapterPage(id);visited[id]=1;store("ahrv-visited",visited);document.title=P[id].t+"｜A-HRV-RL"}
+ else if(sec){v.innerHTML=sectionPage(sec);document.title=sec.name+"｜A-HRV-RL"}
+ else{id="home";v.innerHTML=home();document.title="A-HRV-RL 研究網站"}
+ v.style.display="flex";v.style.flexDirection="column";v.style.gap="24px";
+ renderNav(id);closeSide();
+ if(id=="flow")simStop=startSim();
+ if(id=="home")simStop=startHome();
+ if(id=="pod")simStop=startPod();
+ if(GL[id])simStop=startTerm(id);
+ window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+
+document.addEventListener("click",function(e){
+ var f=e.target.closest("[data-fav]");
+ if(f){e.preventDefault();var id=f.getAttribute("data-fav");favs[id]=!favs[id];store("ahrv-favs",favs);document.querySelectorAll('[data-fav="'+id+'"]').forEach(function(b){b.setAttribute("aria-pressed",favs[id]?"true":"false")});return}
+ var jp=e.target.closest("[data-jump]");
+ if(jp){e.preventDefault();var tg=document.getElementById(jp.getAttribute("data-jump"));if(tg)tg.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});return}
+ var r=e.target.closest("[data-rail]");
+ if(r){var rail=document.getElementById("rail");rail.scrollBy({left:(+r.getAttribute("data-rail"))*rail.clientWidth*0.9});return}
+ if(e.target.closest("#seeAll")){e.preventDefault();var b=document.getElementById("lessonBody"),all=b.children.length<ORDER.length;b.innerHTML=(all?ORDER:ORDER.slice(0,5)).map(rowHTML).join("");e.target.textContent=all?"收合":"查看全部";return}
+});
+
+/* sidebar drawer + theme */
+var side=document.getElementById("side"),scrim=document.getElementById("scrim");
+function closeSide(){side.classList.remove("open");scrim.classList.remove("show")}
+document.getElementById("menuBtn").onclick=function(){side.classList.add("open");scrim.classList.add("show")};
+scrim.onclick=closeSide;
+var appEl=document.querySelector(".app"),colBtn=document.getElementById("collapseBtn");
+function setCollapsed(v){appEl.classList.toggle("collapsed",v);var lb=v?"展開側欄":"收合側欄";colBtn.setAttribute("aria-expanded",v?"false":"true");colBtn.setAttribute("aria-label",lb);colBtn.title=lb;store("ahrv-side",v?1:0);setTimeout(function(){window.dispatchEvent(new Event("resize"))},300)}
+colBtn.onclick=function(){setCollapsed(!appEl.classList.contains("collapsed"))};
+if(store("ahrv-side")==1)setCollapsed(true);
+document.querySelectorAll(".friend").forEach(function(a){var b=a.querySelector("b");if(b)a.title=b.textContent});
+
+/* search */
+var q=document.getElementById("q"),res=document.getElementById("results"),hl=-1;
+function doSearch(){var s=q.value.trim().toLowerCase();hl=-1;
+ if(!s){res.hidden=true;return}
+ var hits=ORDER.filter(function(id){var p=P[id];return (p.t+" "+p.d+" "+p.kw+" "+SEC_OF[id].name).toLowerCase().indexOf(s)>-1});
+ res.innerHTML=hits.length?hits.map(function(id){var sc=SEC_OF[id];return '<a href="#'+id+'"><span class="av tint c-'+sc.color+'">'+ic(sc.icon)+'</span><span class="lbl"><b>'+esc(P[id].t)+'</b><small>'+esc(sc.name)+'・'+esc(P[id].d)+'</small></span></a>'}).join(""):'<div class="none">找不到「'+esc(q.value)+'」相關章節，試試「RMSSD」或「Stroop」。</div>';
+ res.hidden=false}
+q.addEventListener("input",doSearch);
+q.addEventListener("keydown",function(e){var a=res.querySelectorAll("a");if(!a.length)return;
+ if(e.key=="ArrowDown"||e.key=="ArrowUp"){e.preventDefault();hl=(hl+(e.key=="ArrowDown"?1:-1)+a.length)%a.length;a.forEach(function(x,i){x.classList.toggle("hl",i==hl)})}
+ if(e.key=="Enter"){location.hash=a[Math.max(hl,0)].getAttribute("href");q.value="";res.hidden=true;q.blur()}
+ if(e.key=="Escape"){res.hidden=true}});
+document.addEventListener("click",function(e){if(!e.target.closest(".search"))res.hidden=true;else if(e.target.closest(".results a")){q.value="";res.hidden=true}});
+
+/* isometric hero illustration (SVG) */
+function isoP(x,y,z){return [(x-y)*0.866,(x+y)*0.5-z]}
+function ipts(a){return a.map(function(p){var q=isoP(p[0],p[1],p[2]);return q[0].toFixed(1)+","+q[1].toFixed(1)}).join(" ")}
+function slab(x,y,z,w,d,h,cls){cls=cls||"";
+ return '<polygon class="f-l'+cls+'" points="'+ipts([[x,y+d,z],[x+w,y+d,z],[x+w,y+d,z+h],[x,y+d,z+h]])+'"/>'+
+ '<polygon class="f-r'+cls+'" points="'+ipts([[x+w,y,z],[x+w,y+d,z],[x+w,y+d,z+h],[x+w,y,z+h]])+'"/>'+
+ '<polygon class="f-t'+cls+'" points="'+ipts([[x,y,z+h],[x+w,y,z+h],[x+w,y+d,z+h],[x,y+d,z+h]])+'"/>'}
+function iline(a,cls,extra){return '<polyline class="'+(cls||"iso-ln")+'" points="'+ipts(a)+'"'+(extra||"")+'/>'}
+function itext(x,y,z,s,dx,dy,anchor){var p=isoP(x,y,z);return '<text class="iso-lbl" x="'+(p[0]+(dx||0)).toFixed(1)+'" y="'+(p[1]+(dy||0)).toFixed(1)+'" text-anchor="'+(anchor||"start")+'">'+s+'</text>'}
+function icirc(x,y,z,r,cls){var p=isoP(x,y,z);return '<circle class="'+cls+'" cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="'+r+'"/>'}
+function heroSVG(){
+ var s='<svg id="isoHero" class="iso-svg" viewBox="-330 -335 660 505" role="img" aria-label="等角插畫：感測、運算、決策、執行四層堆疊，連接心率帶、LED 燈條、藍牙耳機與資料檔">',k,i;
+ s+=iline([[20,150,0],[20,85,0]],"iso-dash")+iline([[150,-20,0],[85,-20,0]],"iso-dash")+iline([[-170,-10,0],[-85,-10,0]],"iso-dash");
+ s+=slab(-230,-40,0,60,60,8)+slab(-230,-40,13,60,60,8)+slab(-230,-40,26,60,60,8)+itext(-170,20,0,"資料檔 ×11",0,24,"middle");
+ s+=slab(-60,150,0,80,80,5)+'<polyline id="ecgLine" class="iso-ln" stroke-dasharray="70 40" points="'+ipts([[-52,190,5],[-30,190,5],[-24,180,5],[-18,206,5],[-12,170,5],[-6,192,5],[14,190,5]])+'"/>'+itext(20,230,0,"Polar H10・心率帶",0,26,"middle");
+ s+=slab(150,-60,0,80,80,5);
+ for(k=0;k<6;k++)s+=icirc(160+k*11,-44,5,3.2,"iso-led");
+ for(k=0;k<5;k++)s+=iline([[166+k*12,-8,5],[166+k*12,-8,5+[10,22,14,26,12][k]]],"iso-ln");
+ s+=itext(230,20,0,"LED 燈條・藍牙耳機",0,26,"middle");
+ var NM=["感測層｜Polar H10","運算層｜RMSSD","決策層｜Q-learning","執行層｜LED + 音樂"],C=[[85,85],[85,-85],[-85,85]];
+ for(i=0;i<4;i++){var z=i*70;
+  s+='<g id="lay'+i+'">'+slab(-85,-85,z,170,170,12,i==2?" ink":"");
+  if(i==0)s+=iline([[-60,0,z+12],[-24,0,z+12],[-16,-12,z+12],[-8,30,z+12],[0,-40,z+12],[8,6,z+12],[60,0,z+12]]);
+  if(i==1)for(var a=0;a<3;a++)for(var b=0;b<3;b++)s+=slab(-62+a*44,-62+b*44,z+12,32,32,6);
+  if(i==2)s+='<g id="qbars"></g>';
+  if(i==3){for(k=0;k<8;k++)s+=icirc(85,-70+k*20,z+12,3,"iso-led")+icirc(-70+k*20,85,z+12,3,"iso-led");
+   s+=slab(-35,-20,z+12,70,50,4)+'<polygon class="f-t" points="'+ipts([[-35,-20,z+16],[35,-20,z+16],[35,-20,z+56],[-35,-20,z+56]])+'"/>'}
+  s+=itext(85,-85,z+6,NM[i],16,4)+'</g>';
+  if(i<3)C.forEach(function(cn){s+=iline([[cn[0],cn[1],z+12],[cn[0],cn[1],z+70]],"iso-dash")});
+ }
+ s+='<circle id="pk1" class="iso-pk" r="4"/><circle id="pk2" class="iso-pk" r="4"/><circle id="pk3" class="iso-pk" r="4"/></svg>';
+ return s;
+}
+function startHero(){
+ var svg=document.getElementById("isoHero");if(!svg)return null;
+ var L=[0,1,2,3].map(function(i){return document.getElementById("lay"+i)}),qb=document.getElementById("qbars"),
+  leds=Array.prototype.slice.call(svg.querySelectorAll(".iso-led")),ecg=document.getElementById("ecgLine"),
+  pk=[1,2,3].map(function(i){return document.getElementById("pk"+i)}),raf=0,t0=performance.now();
+ function put(e,p){e.setAttribute("cx",p[0].toFixed(1));e.setAttribute("cy",p[1].toFixed(1))}
+ function frame(now){var t=(now-t0)/1000;
+  L.forEach(function(g,i){g.setAttribute("transform","translate(0 "+(Math.sin(t*1.2+i*.8)*3.5).toFixed(2)+")")});
+  var Q=[.35+.12*Math.sin(t*.7),.85+.1*Math.sin(t*.9+1),.2+.08*Math.sin(t*.6+2),.5+.12*Math.sin(t*.8+3)];
+  qb.innerHTML=Q.map(function(q,i){return slab(-62+i*34,-10,152,20,20,8+q*42)}).join("");
+  leds.forEach(function(e,i){e.classList.toggle("on",(Math.floor(t*5)+i)%5==0)});
+  ecg.style.strokeDashoffset=String((-t*40)%110);
+  put(pk[0],isoP(85,85,12+((t*.35)%1)*198));
+  put(pk[1],isoP(20,150-((t*.5)%1)*65,0));
+  put(pk[2],isoP(85+((t*.5+.5)%1)*65,-20,0));
+  raf=requestAnimationFrame(frame)}
+ if(matchMedia("(prefers-reduced-motion: reduce)").matches){frame(t0+1500);cancelAnimationFrame(raf);raf=0}
+ else raf=requestAnimationFrame(frame);
+ return function(){if(raf)cancelAnimationFrame(raf)}
+}
+
+/* 45-second concept video (canvas motion graphics) */
+function startVideo(){
+ var cv=document.getElementById("vidCv");if(!cv)return null;
+ var c=cv.getContext("2d"),DUR=45,t=3,playing=false,last=0,raf=0,BA=1;
+ var seek=document.getElementById("vidSeek"),tm=document.getElementById("vidTime"),pb=document.getElementById("vidPlay"),big=document.getElementById("vidBig");
+ var INK="#141414",MU="#4F4F4A",GR="#F0F0EC",GR2="#E2E2DD",FT="#FFFFFF",FL="#F0F0EC",FR="#DEDED8",BODY="#2A2A27";
+ var SERIF='"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC",sans-serif',SANS=SERIF;
+ var O=[900,430];
+ function cl(x){return x<0?0:x>1?1:x}
+ function eo(x){x=cl(x);return 1-Math.pow(1-x,3)}
+ function pr(v,a,b){return cl((v-a)/(b-a))}
+ function P(x,y,z){return [O[0]+(x-y)*.866,O[1]+(x+y)*.5-z]}
+ function path(ps){c.beginPath();ps.forEach(function(p,i){var q=P(p[0],p[1],p[2]);if(i)c.lineTo(q[0],q[1]);else c.moveTo(q[0],q[1])})}
+ function poly(ps,fill){path(ps);c.closePath();if(fill){c.fillStyle=fill;c.fill()}c.strokeStyle=INK;c.lineWidth=1.6;c.lineJoin="round";c.stroke()}
+ function line(ps,col,lw,dash){path(ps);c.setLineDash(dash||[]);c.strokeStyle=col||INK;c.lineWidth=lw||1.6;c.lineCap="round";c.stroke();c.setLineDash([])}
+ function box(x,y,z,w,d,h,top,l,r){poly([[x,y+d,z],[x+w,y+d,z],[x+w,y+d,z+h],[x,y+d,z+h]],l||FL);poly([[x+w,y,z],[x+w,y+d,z],[x+w,y+d,z+h],[x+w,y,z+h]],r||FR);poly([[x,y,z+h],[x+w,y,z+h],[x+w,y+d,z+h],[x,y+d,z+h]],top||FT)}
+ function inkBox(x,y,z,w,d,h){box(x,y,z,w,d,h,INK,"#2E2E2E","#3E3E3E")}
+ function txt(s,x,y,font,col,al,align){c.globalAlpha=BA*al;c.font=font;c.fillStyle=col;c.textAlign=align||"left";c.textBaseline="alphabetic";c.fillText(s,x,y);c.globalAlpha=BA}
+ function itxt(s,p3,dx,dy,font,col,al,align){var q=P(p3[0],p3[1],p3[2]);txt(s,q[0]+(dx||0),q[1]+(dy||0),font,col,al,align||"center")}
+ function dot(q,r,on,col){c.beginPath();c.arc(q[0],q[1],r,0,7);c.fillStyle=on?(col||INK):FT;c.fill();c.strokeStyle=INK;c.lineWidth=1.2;c.stroke()}
+ function grid(){c.strokeStyle=GR;c.lineWidth=1;c.beginPath();for(var k=-18;k<=34;k++){var y0=k*44;c.moveTo(0,y0);c.lineTo(1280,y0+739);c.moveTo(0,y0);c.lineTo(1280,y0-739)}c.stroke()}
+ function g(x,cn,w,a){return a*Math.exp(-Math.pow((x-cn)/w,2))}
+ function wave(x){return g(x,.15,.03,.12)+g(x,.28,.008,-.15)+g(x,.3,.012,1)+g(x,.325,.01,-.25)+g(x,.55,.05,.25)}
+ function block(lt,dur,lastScene,label,h1,h2,body){
+  var out=lastScene?1:1-pr(lt,dur-.45,dur);
+  function a(s){return eo(pr(lt,s,s+.6))*out}
+  function dy(s){return (1-eo(pr(lt,s,s+.6)))*18}
+  txt(label,90,215+dy(.1),"600 17px "+SANS,MU,a(.1));
+  txt(h1,90,300+dy(.25),"700 58px "+SERIF,INK,a(.25));
+  txt(h2,90,374+dy(.45),"700 58px "+SERIF,MU,a(.45));
+  body.forEach(function(b,i){txt(b,90,448+i*34+dy(.75),"400 21px "+SANS,BODY,a(.75))});
+ }
+ var NM=["感測層","運算層","決策層","執行層"];
+ function stack(lt,drop){
+  for(var i=0;i<4;i++){
+   var pa=drop?eo(pr(lt,.3+i*.3,1+i*.3)):1;
+   var z=i*80+(1-pa)*240+Math.sin(lt*1.3+i*.8)*3,a,b;
+   if(pa>0){c.globalAlpha=BA*pa;
+    if(i==2)inkBox(-90,-90,z,180,180,12);else box(-90,-90,z,180,180,12);
+    if(i==0)line([[-60,0,z+12],[-24,0,z+12],[-16,-12,z+12],[-8,30,z+12],[0,-40,z+12],[8,6,z+12],[60,0,z+12]]);
+    if(i==1)for(a=0;a<3;a++)for(b=0;b<3;b++)box(-64+a*44,-64+b*44,z+12,32,32,6);
+    if(i==2)for(a=0;a<4;a++)box(-64+a*34,-10,z+12,20,20,10+[.35,.85,.2,.5][a]*44);
+    if(i==3)for(a=0;a<8;a++){dot(P(90,-74+a*20,z+12),3.4,(Math.floor(lt*5)+a)%4==0);dot(P(-74+a*20,90,z+12),3.4,(Math.floor(lt*5)+a+2)%4==0)}
+    c.globalAlpha=BA;
+    itxt(NM[i],[90,-90,z+6],16,5,"500 15px "+SANS,MU,drop?pr(lt,2.2,2.8):1,"left");
+   }
+   if(i<3){var p2=drop?pr(lt,2,2.5):1;if(p2>0){c.globalAlpha=BA*p2;[[90,90],[90,-90],[-90,90]].forEach(function(cn){line([[cn[0],cn[1],i*80+12],[cn[0],cn[1],(i+1)*80]],MU,1,[3,4])});c.globalAlpha=BA}}
+  }
+ }
+ function s1(lt,dur,m){if(m=="text")return block(lt,dur,false,"A-HRV-RL・概念影片","A-HRV-RL","個人化舒壓系統",["用心率變異度與強化學習，","找出最讓你放鬆的燈光與音樂"]);stack(lt,true)}
+ function s2(lt,dur,m){if(m=="text")return block(lt,dur,false,"01 — 問題","同一套燈光音樂","效果因人而異",["S01：RMSSD +17.71 ms（更放鬆）","S02：RMSSD −12.36 ms（更緊繃）"]);
+  var ap=eo(pr(lt,.2,.7)),pp=eo(pr(lt,.4,.9)),gr=eo(pr(lt,1.6,3));
+  c.globalAlpha=BA*ap;box(-130,-130,0,80,80,26);var lq=P(-90,-90,60);dot(lq,20,true,"#E4FFE4");c.globalAlpha=BA;
+  var rp=pr(lt,.8,1.6);if(rp>0){var dsh=[5,6];c.lineDashOffset=-lt*30;line([[-90,-90,40],[-90+95*rp,-90+265*rp,14]],MU,1.4,dsh);line([[-90,-90,40],[-90+265*rp,-90+95*rp,14]],MU,1.4,dsh);c.lineDashOffset=0}
+  c.globalAlpha=BA*pp;box(-60,110,0,130,130,14);box(110,-60,0,130,130,14);c.globalAlpha=BA;
+  if(pp>.5){var hA=90+gr*70,hB=90-gr*55;
+   box(-15,155,14,40,40,hA,INK,"#2E2E2E","#3E3E3E");line([[-15,155,104],[25,155,104],[25,195,104],[-15,195,104],[-15,155,104]],MU,1,[3,4]);
+   box(155,-15,14,40,40,hB);line([[155,-15,104],[195,-15,104],[195,25,104],[155,25,104],[155,-15,104]],MU,1,[3,4]);
+   itxt("S01",[70,240,0],0,30,"700 17px "+SANS,INK,pp);itxt("S02",[240,70,0],0,30,"700 17px "+SANS,INK,pp);
+   itxt("+17.71 ms",[5,175,14+hA],0,-22,"400 32px "+SERIF,INK,pr(lt,2.6,3.2));itxt("−12.36 ms",[175,5,104],0,-22,"400 32px "+SERIF,INK,pr(lt,2.6,3.2))}
+ }
+ function s3(lt,dur,m){if(m=="text")return block(lt,dur,false,"02 — 感測","讀懂每一次心跳","Polar H10",["逐拍量測心跳間隔（RR），","每 60 秒計算一次 RMSSD"]);
+  var ap=eo(pr(lt,.2,.7));c.globalAlpha=BA*ap;
+  poly([[-150,-70,60],[150,-70,60],[150,-70,210],[-150,-70,210]],"rgba(255,255,255,.92)");
+  var rv=eo(pr(lt,.5,2.2)),pts=[];for(var x=-140;x<=-140+280*rv;x+=3)pts.push([x,-70,120+wave((((x+lt*120)/100)%1+1)%1)*70]);if(pts.length>1)line(pts,INK,2);
+  box(-90,-20,0,180,140,16);
+  var ph=(lt%0.8)/0.8,pu=Math.exp(-Math.pow((ph-.1)/.07,2)),hq=P(0,50,16),sc=22*(1+.2*pu);
+  c.beginPath();c.moveTo(hq[0],hq[1]-10+sc*.9);c.bezierCurveTo(hq[0]-sc*1.4,hq[1]-10+sc*.1,hq[0]-sc*.9,hq[1]-10-sc*1.1,hq[0],hq[1]-10-sc*.35);c.bezierCurveTo(hq[0]+sc*.9,hq[1]-10-sc*1.1,hq[0]+sc*1.4,hq[1]-10+sc*.1,hq[0],hq[1]-10+sc*.9);c.fillStyle=INK;c.fill();
+  line([[90,120,8],[150,120,0],[150,160,0]],MU,1,[3,4]);
+  var n=Math.min(8,Math.floor(pr(lt,1.2,6)*9));for(var k=0;k<n;k++)box(150,160,k*20,28,28,16,k==n-1?INK:FT);
+  c.globalAlpha=BA;itxt("RMSSD",[164,174,n*20+16],0,-16,"700 16px "+SANS,INK,ap);itxt("RR 間期",[-150,-70,210],0,-10,"500 15px "+SANS,MU,ap,"left");
+ }
+ var TOPS=["#FFE3B0","#E4FFE4","#DCEEFF","#EBC9BF"],QV=[.35,.85,.2,.5];
+ function s4(lt,dur,m){if(m=="text")return block(lt,dur,false,"03 — 決策","AI 試誤學習","選出最佳方案",["四種音光組合 A1–A4，","ε-greedy：20% 探索、80% 利用"]);
+  var pick=eo(pr(lt,5.2,6)),e=pr(lt,1.2,4.8),cur=e<1?Math.floor(e*4):1;
+  for(var i=0;i<4;i++){var x0=-230+i*115,y0=-60,ap=eo(pr(lt,.2+i*.12,.6+i*.12));if(ap<=0)continue;
+   c.globalAlpha=BA*ap;box(x0,y0,0,90,90,12,TOPS[i]);
+   var gw=eo(pr(lt,1.5+i*.9,2.2+i*.9)),h=QV[i]*190*gw;
+   if(h>1)box(x0+18,y0+18,12,54,54,h,(i==1&&pick>.5)?INK:FT,(i==1&&pick>.5)?"#2E2E2E":FL,(i==1&&pick>.5)?"#3E3E3E":FR);
+   c.globalAlpha=BA;itxt("A"+(i+1),[x0+90,y0+90,0],0,28,"700 16px "+SANS,INK,ap);
+   if(i==cur&&lt>1.2){var tq=P(x0+45,y0+45,12+h+34+Math.sin(lt*6)*4);c.beginPath();c.moveTo(tq[0]-9,tq[1]-12);c.lineTo(tq[0]+9,tq[1]-12);c.lineTo(tq[0],tq[1]);c.closePath();c.fillStyle=INK;c.fill()}
+  }
+  itxt("A2 自然沉浸",[-115+45,-15,12+QV[1]*190],0,-60,"400 30px "+SERIF,INK,pick);
+  txt("Q(a) ← Q(a) + α × (R − Q(a))",900,615,"400 22px "+SERIF,MU,pr(lt,1,1.6),"center");
+ }
+ function s5(lt,dur,m){if(m=="text")return block(lt,dur,false,"04 — 執行","燈光與音樂","自動切換",["LED 燈條 5 秒淡入，","藍牙耳機播放對應音樂"]);
+  var ap=eo(pr(lt,.2,.7)),lp=eo(pr(lt,1,2.6)),k;c.globalAlpha=BA*ap;
+  box(-170,-170,0,320,320,8);
+  if(lp>0){path([[-160,-160,8],[150,-160,8],[150,150,8],[-160,150,8]]);c.closePath();c.fillStyle="rgba(150,230,150,"+(.22*lp).toFixed(3)+")";c.fill()}
+  box(-170,-160,8,10,310,180);box(-170,-170,8,320,10,180);
+  [-110,90].forEach(function(x){for(k=0;k<12;k++){var on=k/12<lp;if(on){c.shadowColor="#9BE89B";c.shadowBlur=14}dot(P(x,-159,30+k*13),4,on,"#A6F0A6");c.shadowBlur=0}});
+  for(k=0;k<12;k++){var on2=k/12<lp;if(on2){c.shadowColor="#9BE89B";c.shadowBlur=14}dot(P(-159,60,30+k*13),4,on2,"#A6F0A6");c.shadowBlur=0}
+  box(-60,-150,8,180,70,62);box(-20,-140,70,90,55,4);poly([[-20,-140,74],[70,-140,74],[70,-140,128],[-20,-140,128]],INK);
+  box(0,0,8,64,56,96);
+  var hq=P(32,28,128);c.beginPath();c.arc(hq[0],hq[1],25,0,7);c.fillStyle=INK;c.fill();
+  c.beginPath();c.arc(hq[0],hq[1]-2,25,Math.PI*1.08,Math.PI*1.92);c.strokeStyle=FT;c.lineWidth=6;c.stroke();
+  [[-25,0],[25,0]].forEach(function(o){c.beginPath();c.ellipse(hq[0]+o[0],hq[1]+2,6,10,0,0,7);c.fillStyle=FT;c.fill();c.strokeStyle=INK;c.lineWidth=1.2;c.stroke()});
+  c.globalAlpha=BA;
+  for(k=0;k<3;k++){var ph=((lt*.6)+k/3)%1;txt("♪",hq[0]+32+k*12,hq[1]-12-ph*80,"400 26px "+SANS,INK,(1-ph)*lp)}
+  itxt("WS2812 LED 燈條",[-159,60,180],-16,4,"500 15px "+SANS,MU,ap,"right");itxt("藍牙耳機",[32,28,128],-40,4,"500 15px "+SANS,MU,ap,"right");
+ }
+ var NODES=[["感測","Polar H10"],["運算","RMSSD"],["決策","Q-learning"],["執行","LED + 音樂"]];
+ function s6(lt,dur,m){if(m=="text")return block(lt,dur,false,"05 — 閉環","每一次介入","都讓系統更懂你",["介入後的 HRV 變化回饋給 AI，","全部在 Raspberry Pi 5 本地運算"]);
+  var R=190,rv=pr(lt,.2,1.6),pts=[],a;
+  for(a=0;a<=rv*Math.PI*2+.001;a+=.05){var an=-Math.PI*.75+a;pts.push([R*Math.cos(an),R*Math.sin(an),0])}
+  if(pts.length>1)line(pts,MU,1.4,[5,6]);
+  c.globalAlpha=BA*eo(pr(lt,.2,.7));inkBox(-45,-45,0,90,90,34);c.globalAlpha=BA;
+  itxt("Raspberry Pi 5",[0,0,34],0,6,"600 15px "+SANS,FT,eo(pr(lt,.4,1)));
+  var ord=[0,1,2,3].map(function(i){var an=-Math.PI*.75+i*Math.PI/2;return {i:i,x:R*Math.cos(an),y:R*Math.sin(an)}}).sort(function(p,q){return (p.x+p.y)-(q.x+q.y)});
+  ord.forEach(function(n){var ap=eo(pr(lt,.3+n.i*.3,.7+n.i*.3));if(ap<=0)return;c.globalAlpha=BA*ap;box(n.x-35,n.y-35,0,70,70,22);c.globalAlpha=BA;
+   itxt(NODES[n.i][0],[n.x+35,n.y+35,0],0,26,"700 18px "+SANS,INK,ap);itxt(NODES[n.i][1],[n.x+35,n.y+35,0],0,46,"500 14px "+SANS,MU,ap)});
+  if(lt>1.6){var pa=-Math.PI*.75+(lt-1.6)*1.4,q=P(R*Math.cos(pa),R*Math.sin(pa),0);c.beginPath();c.arc(q[0],q[1],7,0,7);c.fillStyle=INK;c.fill()}
+ }
+ function s7(lt,dur,m){if(m=="text")return block(lt,dur,true,"研究願景","因人而異的","放鬆配方",["N-of-1 個案系列研究，","為每個人找到最適合的放鬆方案"]);
+  stack(lt+3,false);var q=P(90,90,12+((lt*.35)%1)*240);c.beginPath();c.arc(q[0],q[1],5,0,7);c.fillStyle=INK;c.fill();
+ }
+ var SC=[[0,5,s1],[5,11,s2],[11,18,s3],[18,26,s4],[26,33,s5],[33,40,s6],[40,45,s7]];
+ function render(tt){
+  c.setTransform(cv.width/1280,0,0,cv.height/720,0,0);
+  c.globalAlpha=1;c.fillStyle="#FFFFFF";c.fillRect(0,0,1280,720);grid();
+  var idx=0;while(idx<6&&tt>=SC[idx+1][0])idx++;
+  var sc=SC[idx],lt=tt-sc[0],dur=sc[1]-sc[0];
+  BA=eo(pr(lt,0,.5))*(idx==6?1:1-pr(lt,dur-.45,dur));c.globalAlpha=BA;
+  sc[2](lt,dur,"art");
+  BA=1;c.globalAlpha=1;sc[2](lt,dur,"text");
+  for(var i=0;i<7;i++){c.fillStyle=GR2;c.fillRect(90+i*46,650,38,3);var f=i<idx?1:i==idx?lt/dur:0;if(f>0){c.fillStyle=INK;c.fillRect(90+i*46,650,38*f,3)}}
+  txt("A-HRV-RL",1190,660,"400 22px "+SERIF,MU,1,"right");
+ }
+ function fmt(v){var s=Math.floor(v);return "00:"+(s<10?"0":"")+s}
+ function sync(){seek.value=t;tm.textContent=fmt(t)+" / 00:45"}
+ function setPlay(p){playing=p;pb.innerHTML=ic(p?"pause":"play");pb.setAttribute("aria-label",p?"暫停":"播放");big.hidden=p;
+  if(p){if(t>=DUR-.01)t=0;last=performance.now();if(!raf)raf=requestAnimationFrame(loop)}else if(raf){cancelAnimationFrame(raf);raf=0}}
+ function loop(now){raf=0;var dt=Math.min(.1,(now-last)/1000);last=now;t=Math.min(DUR,t+dt);render(t);sync();if(t>=DUR){setPlay(false);return}raf=requestAnimationFrame(loop)}
+ seek.addEventListener("input",function(){t=+seek.value;render(t);sync()});
+ pb.onclick=function(){setPlay(!playing)};big.onclick=function(){setPlay(true)};cv.onclick=function(){setPlay(!playing)};
+ function size(){var dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth||640;cv.width=Math.round(w*dpr);cv.height=Math.round(w*9/16*dpr);render(t)}
+ size();sync();window.addEventListener("resize",size);
+ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){render(t)});
+ return function(){setPlay(false);window.removeEventListener("resize",size)}
+}
+/* future product: comic */
+function limb(d){return '<path class="cm-limb-o" d="'+d+'"/><path class="cm-limb-i" d="'+d+'"/>'}
+function cmCap(x,y,w,s){return '<g class="cm-cap"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="30"/><text x="'+(x+12)+'" y="'+(y+20)+'">'+s+'</text></g>'}
+function ecgPts(x0,y,w,per){var a=[];for(var x=0;x<=w;x+=2){var p=(x%per)/per,v=(p>.4&&p<.5)?-14*Math.sin((p-.4)/.1*Math.PI):((p>.5&&p<.56)?6:0);a.push((x0+x)+","+(y+v).toFixed(1))}return a.join(" ")}
+function podShape(id,o){
+ var s='<path class="cm-ln" d="M190,280 L292,260 M200,260 L284,282"/><ellipse class="cm-fill" cx="242" cy="270" rx="16" ry="6"/><path class="cm-ln" d="M242,262 L242,236"/>';
+ s+='<g transform="translate(236,150) rotate(-22) scale(.92)">';
+ s+='<path class="cm-fill" d="M-175,0 A175,125 0 0 0 175,0 Z"/><path class="cm-dots" d="M-150,40 A160,100 0 0 0 150,40 A175,125 0 0 1 -150,40 Z"/>';
+ s+='<ellipse class="cm-tint-s" cx="0" cy="0" rx="175" ry="34"/>';
+ s+='<clipPath id="'+id+'clip"><path d="M-175,0 A175,34 0 0 0 175,0 L175,-220 L-175,-220 Z"/></clipPath><g clip-path="url(#'+id+'clip)">';
+ s+='<path class="cm-fill" d="M-158,-8 C-120,-30 -60,-12 -20,2 C30,16 90,-2 156,-6 C140,8 100,20 60,18 C10,16 -40,12 -90,10 C-120,8 -158,6 -158,-8 Z"/>';
+ if(o.mass)s+='<path class="cm-ln thin" d="M-70,22 q8,-6 16,0 M-40,24 q8,-6 16,0 M40,22 q8,-6 16,0"/>';
+ s+=limb("M-104,-16 L-12,0")+limb("M-12,0 L56,-14 L120,-4")+limb("M-84,-8 L-52,6 L-30,0")+'<ellipse class="cm-fill" cx="128" cy="-4" rx="13" ry="8"/>';
+ if(o.band)s+='<rect class="cm-ink" x="-62" y="-2" width="14" height="12" rx="3" transform="rotate(25 -55 4)"/>';
+ s+='<circle class="cm-fill" cx="-124" cy="-26" r="21"/><path class="cm-ink" d="M-145,-24 C-148,-54 -106,-58 -102,-34 C-112,-44 -132,-44 -145,-24 Z"/>';
+ s+=o.closed?'<path class="cm-ln thin" d="M-120,-22 q5,4 10,0"/>':'<circle class="cm-ink" cx="-115" cy="-24" r="2.4"/>';
+ if(o.sleep)s+='<path class="cm-ln thin" d="M-118,-12 q4,2 8,0"/>';
+ s+='</g>';
+ s+='<path class="cm-fill" d="M-175,0 A175,34 0 0 0 175,0 A170,30 0 0 1 -175,0 Z"/>';
+ if(o.on)s+='<ellipse class="cm-glow" cx="0" cy="0" rx="175" ry="34"/>';
+ s+='<ellipse id="'+id+'led" class="cm-led'+(o.on?' on':'')+'" cx="0" cy="0" rx="172" ry="32"/>';
+ s+='<circle class="cm-fill" cx="-160" cy="-4" r="11"/><circle class="cm-ink" cx="-160" cy="-4" r="4"/><circle class="cm-fill" cx="162" cy="-2" r="11"/><circle class="cm-ink" cx="162" cy="-2" r="4"/>';
+ s+='<g id="'+id+'knob"><circle class="cm-fill" cx="-30" cy="33" r="9"/><path class="cm-ln thin" d="M-30,33 L-30,26"/></g><circle class="'+(o.on?'cm-ink':'cm-fill')+'" cx="-12" cy="34" r="3.5"/>';
+ s+='<path class="cm-dome'+(o.ghost?' ghost':'')+'" d="M-175,0 A175,125 0 0 1 175,0"/>'+(o.ghost?'':'<path class="cm-ln thin" d="M-120,-60 A150,100 0 0 1 40,-108"/>');
+ s+='</g>';
+ return s;
+}
+function podShapeOld(id,o){
+ var rim="M92,196 C102,150 192,130 282,140 C352,148 386,180 381,206";
+ var s='<rect class="cm-fill" x="175" y="268" width="130" height="8" rx="3"/>'+
+ '<path class="cm-fill" d="M60,205 C60,130 160,100 260,110 C360,120 420,165 410,212 C400,252 300,272 220,268 C130,264 60,248 60,205 Z"/>'+
+ '<path class="cm-dots" d="M66,226 C110,258 300,272 404,228 C396,258 300,270 220,268 C130,264 74,250 66,226 Z"/>'+
+ '<path class="cm-tint-s" d="'+rim+' C320,222 160,224 92,196 Z"/>';
+ if(o.on)s+='<path class="cm-glow" d="'+rim+'"/>';
+ s+='<path id="'+id+'led" class="cm-led'+(o.on?' on':'')+'" d="'+rim+'"/>';
+ s+='<circle class="cm-fill" cx="118" cy="165" r="11"/><circle class="cm-ink" cx="118" cy="165" r="4"/><circle class="cm-fill" cx="372" cy="192" r="11"/><circle class="cm-ink" cx="372" cy="192" r="4"/>';
+ s+=limb("M178,182 L258,203")+limb("M258,203 L318,182 L382,206")+limb("M190,192 L226,210 L252,203")+'<ellipse class="cm-fill" cx="390" cy="208" rx="13" ry="8"/>';
+ s+='<circle class="cm-fill" cx="158" cy="168" r="21"/><path class="cm-ink" d="M137,170 C134,140 176,136 180,160 C170,150 150,150 137,170 Z"/>';
+ s+=o.closed?'<path class="cm-ln thin" d="M162,172 q5,4 10,0"/>':'<circle class="cm-ink" cx="167" cy="170" r="2.4"/>';
+ if(o.sleep)s+='<path class="cm-ln thin" d="M164,182 q4,2 8,0"/>';
+ s+='<path class="cm-dome'+(o.ghost?' ghost':'')+'" d="M92,198 C100,70 330,55 405,200"/>'+(o.ghost?'':'<path class="cm-ln thin" d="M132,140 C160,104 230,90 292,98"/>');
+ return s;
+}
+function comicSVG(){
+ var s='<defs><pattern id="halftone" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.2" class="cm-ink" opacity=".45"/></pattern><clipPath id="cpc"><rect width="460" height="280"/></clipPath></defs>',k;
+ var sp='';for(k=0;k<28;k++){var a=k*Math.PI*2/28;sp+='<line class="cm-speed" x1="'+(164+Math.cos(a)*70).toFixed(1)+'" y1="'+(120+Math.sin(a)*70).toFixed(1)+'" x2="'+(164+Math.cos(a)*460).toFixed(1)+'" y2="'+(120+Math.sin(a)*460).toFixed(1)+'"/>'}
+ function frame(id,x,y){return '<g id="'+id+'" transform="translate('+x+','+y+')"><rect class="cm-frame" width="460" height="280"/><g clip-path="url(#cpc)">'}
+ s+=frame("cp1",10,10)+sp+
+  '<rect class="cm-fill" x="110" y="228" width="70" height="8"/><path class="cm-ln" d="M114,228 L102,168 M120,236 L114,276 M172,236 L178,276"/>'+
+  '<rect class="cm-fill" x="36" y="236" width="56" height="40" rx="5"/><path class="cm-ln thin" d="M54,236 v-9 h20 v9 M36,252 h56"/>'+
+  limb("M170,150 L178,226")+limb("M178,226 L232,232 L238,276")+limb("M174,166 L222,190 L270,188")+
+  '<path class="cm-ink" d="M168,147 L177,147 L175,170 L172.5,177 L170,170 Z"/>'+
+  '<circle class="cm-fill" cx="164" cy="120" r="24"/><path class="cm-ink" d="M140,122 C136,88 192,86 190,118 C180,104 156,102 140,122 Z"/><circle class="cm-ink" cx="176" cy="122" r="2.4"/><path class="cm-ln thin" d="M168,134 q4,-3 8,0 q4,3 8,0"/>'+
+  '<g id="stress"><path class="cm-ln" d="M118,80 L128,66 L136,80 L146,64 L154,78"/><text class="cm-txt" x="196" y="88" style="font-size:28px">!!</text><path class="cm-fill" d="M198,106 C191,117 193,124 198,124 C203,124 205,117 198,106 Z"/></g>'+
+  '<rect class="cm-fill" x="210" y="196" width="250" height="10"/><rect class="cm-fill" x="438" y="206" width="8" height="80"/>'+
+  '<polygon class="cm-fill" points="282,190 300,112 408,112 392,190"/><path class="cm-fill" d="M262,196 L398,196 L392,190 L268,190 Z"/><path class="cm-ln thin" d="M308,130 L362,130 M306,142 L384,142 M302,154 L346,154 M300,166 L374,166"/>'+
+  '<path class="cm-fill" d="M410,168 L434,168 L432,196 L412,196 Z"/><path class="cm-ln thin" d="M434,174 q10,0 10,8 q0,8 -10,8 M416,162 q4,-6 0,-12 M426,162 q4,-6 0,-12"/>'+
+  '<circle class="cm-fill" cx="420" cy="62" r="24"/><path class="cm-ln" d="M420,62 L420,46 M420,62 L408,62"/><text class="cm-txt" x="420" y="104" text-anchor="middle" style="font-size:13px">20:00</text>'+
+  '<rect class="cm-fill" x="280" y="216" width="150" height="54" rx="6"/><text class="cm-txt" x="292" y="236" style="font-size:13px">心率 96 bpm</text><polyline id="ecg1" class="cm-ln thin" points="'+ecgPts(292,258,126,18)+'"/>'+
+  '</g>'+cmCap(12,12,236,"晚上八點，終於下班了⋯")+'</g>';
+ s+=frame("cp2",490,10)+podShape("p2",{ghost:true,band:true})+'<g id="scan"><path class="cm-ln thin" d="M206,160 q10,12 0,24 M214,152 q16,20 0,40 M222,144 q22,28 0,56"/></g>'+
+  '<path class="cm-ln thin" d="M180,206 a16,16 0 1 0 22,4"/><path class="cm-ink" d="M203,214 l-9,-1 l5,-7 z"/>'+
+  '<ellipse class="cm-fill" cx="345" cy="46" rx="104" ry="28"/><path class="cm-fill" d="M318,71 L304,96 L336,73"/><text class="cm-txt" x="345" y="51" text-anchor="middle">藍牙連線：手腕心率帶</text>'+
+  '</g>'+cmCap(12,12,176,"戴上心率帶、轉旋鈕")+'</g>';
+ var chips='';for(k=0;k<4;k++)chips+='<rect class="'+(k==1?'cm-ink':'cm-fill')+'" x="'+(310+k*34)+'" y="44" width="30" height="20" rx="3"/><text class="cm-txt" x="'+(325+k*34)+'" y="58" text-anchor="middle" style="font-size:12px'+(k==1?';fill:var(--card)':'')+'">A'+(k+1)+'</text>';
+ s+=frame("cp3",10,310)+podShape("p3",{closed:true,on:true,mass:true})+
+  '<path class="cm-ln thin" d="M392,80 q12,12 0,24 M402,72 q20,20 0,40"/><path class="cm-ln thin" d="M78,190 q-12,12 0,24 M68,182 q-20,20 0,40"/>'+
+  '<path class="cm-ln thin" d="M100,150 q6,-8 0,-16 q-6,-8 0,-16 M112,146 q6,-8 0,-16 q-6,-8 0,-16 M124,150 q6,-8 0,-16 q-6,-8 0,-16"/><text class="cm-txt" x="96" y="104" style="font-size:13px">香氛</text><text class="cm-txt" x="240" y="262" text-anchor="middle" style="font-size:13px">燈光・音樂・香氛・按摩</text>'+
+  '<g id="notes"><text class="cm-txt" style="font-size:24px">♪</text><text class="cm-txt" style="font-size:20px">♫</text><text class="cm-txt" style="font-size:24px">♪</text><text class="cm-txt" style="font-size:18px">♫</text></g>'+
+  '<rect class="cm-fill" x="300" y="14" width="148" height="58" rx="6"/><text class="cm-txt" x="312" y="34" style="font-size:13px">AI 選擇 A2</text>'+chips+
+  '</g>'+cmCap(12,12,176,"依心跳啟動五感")+'</g>';
+ s+=frame("cp4",490,310)+podShape("p4",{closed:true,on:true,sleep:true,band:true})+
+  '<g id="zzz"><text class="cm-txt" style="font-size:24px">Z</text><text class="cm-txt" style="font-size:19px">z</text><text class="cm-txt" style="font-size:15px">z</text></g>'+
+  '<rect class="cm-fill" x="300" y="14" width="148" height="66" rx="6"/><text class="cm-txt" x="312" y="33" style="font-size:13px">放鬆紀錄・RMSSD ↑</text><path class="cm-ln thin" d="M312,70 L436,70 M312,70 L312,42"/><polyline id="gr" class="cm-ln" points="314,66 340,62 364,60 388,52 412,46 434,38"/>'+
+  '</g>'+cmCap(12,12,150,"十五分鐘後⋯")+'</g>';
+ return s;
+}
+/* future product: exploded isometric view */
+function podExploded(e,t){
+ function f(v){return v.toFixed(1)}
+ function cl(x){return x<0?0:x>1?1:x}
+ function cyl(x,y,z,r,h,top){var a=isoP(x,y,z),b=isoP(x,y,z+h),rx=r*1.2247,ry=r*.7071;
+  return '<path class="f-l st" d="M'+f(a[0]-rx)+','+f(a[1])+' A'+f(rx)+','+f(ry)+' 0 0 0 '+f(a[0]+rx)+','+f(a[1])+' L'+f(b[0]+rx)+','+f(b[1])+' A'+f(rx)+','+f(ry)+' 0 0 1 '+f(b[0]-rx)+','+f(b[1])+' Z"/><ellipse class="'+(top||"f-t")+' st" cx="'+f(b[0])+'" cy="'+f(b[1])+'" rx="'+f(rx)+'" ry="'+f(ry)+'"/>'}
+ function el(x,y,z,r,cls){var a=isoP(x,y,z);return '<ellipse class="'+cls+'" cx="'+f(a[0])+'" cy="'+f(a[1])+'" rx="'+f(r*1.2247)+'" ry="'+f(r*.7071)+'"/>'}
+ var OFF=[0,45,100,190,250,340,400],la=cl((e-.35)/.4),out='';
+ function grp(i,inner,ax,ay,name,sub){var dy=-OFF[i]*e;
+  return '<g transform="translate(0 '+f(dy)+')">'+inner+(la>0?'<g opacity="'+la.toFixed(2)+'"><polyline class="iso-dash" points="'+f(ax+6)+','+f(ay)+' 214,'+f(ay)+'"/><circle class="iso-pk" cx="'+f(ax+4)+'" cy="'+f(ay)+'" r="2.6"/><text class="ex-num" x="222" y="'+f(ay+4)+'">'+name+'</text><text class="iso-lbl" x="222" y="'+f(ay+21)+'">'+sub+'</text></g>':'')+'</g>'}
+ var b='';[[-80,0],[0,-80],[80,0],[0,80]].forEach(function(l){var p0=isoP(0,0,4),p1=isoP(l[0],l[1],4);b+='<line class="iso-ln" style="stroke-width:5" x1="'+f(p0[0])+'" y1="'+f(p0[1])+'" x2="'+f(p1[0])+'" y2="'+f(p1[1])+'"/>'+cyl(l[0],l[1],0,8,4)});
+ b+=cyl(0,0,4,10,40);
+ out+=grp(0,b,69,40,"⑦ 底座","四腳支撐，穩定不晃動");
+ out+=grp(1,slab(-30,-22,44,60,44,14," ink")+slab(-30,26,44,60,22,14),45,-46,"⑥ 運算模組","Raspberry Pi 5 + 電源，本地 Edge RL");
+ var zr=125,r=120,zb=50,rb=58,cr=isoP(0,0,zr),cb=isoP(0,0,zb),rx=r*1.2247,ry=r*.7071,bx=rb*1.2247,by=rb*.7071;
+ var d='M'+f(cr[0]-rx)+','+f(cr[1])+' C'+f(cr[0]-rx)+','+f(cr[1]+70)+' '+f(cb[0]-bx-30)+','+f(cb[1])+' '+f(cb[0]-bx)+','+f(cb[1])+' A'+f(bx)+','+f(by)+' 0 0 0 '+f(cb[0]+bx)+','+f(cb[1])+' C'+f(cb[0]+bx+30)+','+f(cb[1])+' '+f(cr[0]+rx)+','+f(cr[1]+70)+' '+f(cr[0]+rx)+','+f(cr[1])+' A'+f(rx)+','+f(ry)+' 0 0 0 '+f(cr[0]-rx)+','+f(cr[1])+' Z';
+ out+=grp(2,'<path class="f-t st" d="'+d+'"/>'+el(0,0,zr,r,"f-l st")+'<path class="iso-dash" d="M'+f(cr[0]-rx*.9)+','+f(cr[1]+38)+' Q'+f(cr[0])+','+f(cr[1]+120)+' '+f(cr[0]+rx*.9)+','+f(cr[1]+38)+'"/>',122,-85,"⑤ 蛋形外殼","包覆式躺姿，降低環境干擾");
+ out+=grp(3,cyl(0,0,70,92,14,"f-t")+el(-30,-20,84,9,"f-t ink st")+el(5,10,84,9,"f-t ink st")+el(35,-30,84,9,"f-t ink st"),113,-77,"④ 感測座墊","內建 ECG 電極，取代胸前心率帶");
+ out+=grp(4,cyl(-90,-10,108,14,24)+el(-90,-10,132,7,"f-t ink st")+cyl(-10,-90,108,14,24)+el(-10,-90,132,7,"f-t ink st"),86,-170,"③ 頭枕喇叭 ×2","取代藍牙耳機，播放 A1–A4 音樂");
+ var lr=el(0,0,128,124,"st nf")+el(0,0,128,117,"st nf");
+ for(var k=0;k<18;k++){var th=-Math.PI/4+k*(Math.PI/17),q=isoP(120.5*Math.cos(th),120.5*Math.sin(th),128);lr+='<circle class="iso-led'+((Math.floor(t*6)+k)%6<2?' on':'')+'" cx="'+f(q[0])+'" cy="'+f(q[1])+'" r="3"/>'}
+ out+=grp(5,lr,152,-128,"② LED 光環","WS2812，依 AI 決策切換色溫");
+ var c0=isoP(0,0,130),h=125;
+ out+=grp(6,'<path class="iso-dash" d="M'+f(c0[0]+rx)+','+f(c0[1])+' A'+f(rx)+','+f(ry)+' 0 0 0 '+f(c0[0]-rx)+','+f(c0[1])+'"/><path class="dome" d="M'+f(c0[0]-rx)+','+f(c0[1])+' A'+f(rx)+','+h+' 0 0 1 '+f(c0[0]+rx)+','+f(c0[1])+' A'+f(rx)+','+f(ry)+' 0 0 1 '+f(c0[0]-rx)+','+f(c0[1])+' Z"/><path class="iso-dash" d="M'+f(c0[0]-rx*.62)+','+f(c0[1]-h*.5)+' Q'+f(c0[0]-rx*.3)+','+f(c0[1]-h*.95)+' '+f(c0[0]+rx*.2)+','+f(c0[1]-h*.92)+'"/>',132,-180,"① 透明穹頂","遮光、隔音，打造個人空間");
+ return out;
+}
+/* exploded view following the study-plan drawing: tilted bowl pod on a cross base */
+function podExploded2(e,t){
+ function f(v){return v.toFixed(1)}
+ function cl(x){return x<0?0:x>1?1:x}
+ var C=Math.cos(-22*Math.PI/180),S=Math.sin(-22*Math.PI/180);
+ function rot(x,y){return [x*C-y*S,x*S+y*C]}
+ var OFF=[0,70,140,215,285,350,410,480],la=cl((e-.35)/.4),out='',k;
+ var RX=175,RY=34,RB=125,R='transform="rotate(-22)"';
+ function grp(i,inner,anc,name,sub){var dy=-OFF[i]*e;
+  return '<g transform="translate(0 '+f(dy)+')">'+inner+(la>0?'<g opacity="'+la.toFixed(2)+'"><polyline class="iso-dash" points="'+f(anc[0]+8)+','+f(anc[1])+' 250,'+f(anc[1])+'"/><circle class="iso-pk" cx="'+f(anc[0]+5)+'" cy="'+f(anc[1])+'" r="2.6"/><text class="ex-num" x="258" y="'+f(anc[1]+4)+'">'+name+'</text><text class="iso-lbl" x="258" y="'+f(anc[1]+21)+'">'+sub+'</text></g>':'')+'</g>'}
+ // 8 cross base
+ var b='<line class="iso-ln" style="stroke-width:5" x1="-96" y1="214" x2="96" y2="176"/><line class="iso-ln" style="stroke-width:5" x1="-64" y1="172" x2="64" y2="218"/>';
+ [[-96,214],[96,176],[-64,172],[64,218]].forEach(function(p){b+='<ellipse class="f-t st" cx="'+p[0]+'" cy="'+p[1]+'" rx="8" ry="4"/>'});
+ b+='<path class="f-l st" d="M-20,196 L-20,176 A20,8 0 0 1 20,176 L20,196 A20,8 0 0 1 -20,196 Z"/><ellipse class="f-t st" cx="0" cy="176" rx="20" ry="8"/><line class="iso-ln" x1="0" y1="176" x2="0" y2="130"/>';
+ out+=grp(0,b,[96,196],"⑧ 十字底座","四腳支撐，穩定不晃動");
+ // 7 control board + cable
+ var cb='<polygon class="f-t st" points="-150,118 -10,96 40,128 -100,150"/>';
+ [[-120,118,22,12],[-80,112,18,10],[-52,118,26,14],[-96,130,14,8]].forEach(function(r){cb+='<rect class="f-l st" x="'+r[0]+'" y="'+r[1]+'" width="'+r[2]+'" height="'+r[3]+'" rx="2"/>'});
+ cb+='<rect class="f-t ink st" x="-30" y="108" width="24" height="14" rx="2"/><polyline class="iso-ln" points="40,124 90,140 150,118 210,138"/>';
+ out+=grp(1,cb,[40,128],"⑦ 主控板","持續計算 RMSSD，在本地決策");
+ // 6 bowl shell
+ var bw='<g '+R+'><path class="f-t st" d="M'+(-RX)+',0 A'+RX+','+RB+' 0 0 0 '+RX+',0 Z"/><path class="iso-dash" d="M-150,14 A150,100 0 0 0 150,14"/><ellipse class="f-l st" cx="0" cy="0" rx="'+RX+'" ry="'+RY+'"/></g>';
+ out+=grp(2,bw,rot(RX,40),"⑥ 蛋形艙體","傾斜包覆式躺姿，開口朝上");
+ // 5 massage modules
+ var ms='<g '+R+'>';[[-70,6],[-48,10],[-26,12],[-70,20],[-48,24],[-26,26]].forEach(function(p){ms+='<rect class="f-t st" x="'+(p[0]-8)+'" y="'+(p[1]-5)+'" width="16" height="10" rx="5"/>'});
+ [[40,6],[66,4],[92,2]].forEach(function(p){ms+='<rect class="f-l st" x="'+(p[0]-12)+'" y="'+(p[1]-4)+'" width="24" height="8" rx="4"/>'});ms+='</g>';
+ out+=grp(3,ms,rot(104,2),"⑤ 按摩模組","背部滾輪與腿部氣囊");
+ // 4 seat liner + knob + status light
+ var se='<g '+R+'><path class="f-t st" d="M-158,-8 C-120,-30 -60,-12 -20,2 C30,16 90,-2 156,-6 C140,8 100,20 60,18 C10,16 -40,12 -90,10 C-120,8 -158,6 -158,-8 Z"/><ellipse class="f-l st" cx="-132" cy="-12" rx="22" ry="10"/><circle class="f-t st" cx="-30" cy="22" r="9"/><circle class="iso-led'+(Math.floor(t*2)%2?' on':'')+'" cx="-12" cy="24" r="3.5"/></g>';
+ out+=grp(4,se,rot(156,-6),"④ 躺椅內襯・扶手旋鈕","轉旋鈕選自動或手動，狀態燈顯示模式");
+ // 3 speakers + aroma outlet
+ var sp='<g '+R+'>';[[-160,-6],[162,-4]].forEach(function(p){sp+='<circle class="f-t st" cx="'+p[0]+'" cy="'+p[1]+'" r="13"/><circle class="f-l st" cx="'+p[0]+'" cy="'+p[1]+'" r="6"/>'});
+ sp+='<rect class="f-l st" x="-130" y="-30" width="22" height="14" rx="4"/><path class="iso-ln" d="M-124,-34 q4,-6 0,-12 M-114,-34 q4,-6 0,-12"/></g>';
+ out+=grp(5,sp,rot(175,-4),"③ 喇叭 ×2・香氛出口","頭側與腳側環繞音樂，頭部旁釋放香氛");
+ // 2 LED strip ring
+ var lr='<g '+R+'><ellipse class="st nf" cx="0" cy="0" rx="'+RX+'" ry="'+RY+'"/><ellipse class="st nf" cx="0" cy="0" rx="'+(RX-7)+'" ry="'+(RY-5)+'"/>';
+ for(k=0;k<22;k++){var th=k/21*Math.PI,px=(RX-3.5)*Math.cos(th),py=(RY-2.5)*Math.sin(th);lr+='<circle class="iso-led'+((Math.floor(t*6)+k)%6<2?' on':'')+'" cx="'+f(px)+'" cy="'+f(py)+'" r="2.8"/>'}lr+='</g>';
+ out+=grp(6,lr,rot(RX,0),"② LED 燈帶","沿艙口一圈，依情境變換色溫");
+ // 1 dome
+ var dm='<g '+R+'><path class="iso-dash" d="M'+RX+',0 A'+RX+','+RY+' 0 0 0 '+(-RX)+',0"/><path class="dome" d="M'+(-RX)+',0 A'+RX+','+RB+' 0 0 1 '+RX+',0 A'+RX+','+RY+' 0 0 1 '+(-RX)+',0 Z"/><path class="iso-dash" d="M-120,-60 A150,100 0 0 1 40,-108"/></g>';
+ out+=grp(7,dm,rot(130,-84),"① 透明穹頂","可開合，遮光又有包覆感");
+ // wrist band (external, connects by Bluetooth)
+ var wb='<g transform="translate(-250,-150)"><rect class="f-l st" x="-26" y="-10" width="52" height="20" rx="10"/><rect class="f-t ink st" x="-12" y="-14" width="24" height="28" rx="6"/><path class="iso-ln" d="M30,-14 q10,14 0,28 M40,-22 q16,22 0,44"/><text class="ex-num" x="0" y="44" text-anchor="middle">手腕心率帶</text><text class="iso-lbl" x="0" y="62" text-anchor="middle">藍牙連線</text></g>';
+ return wb+out;
+}
+function startPod(){
+ var ex=document.getElementById("podEx");if(!ex)return null;
+ function $(i){return document.getElementById(i)}
+ function cl(x){return x<0?0:x>1?1:x}
+ var sl=$("podSlider"),au=$("podAuto"),pb=$("podPlay"),panels=[1,2,3,4].map(function(i){return $("cp"+i)});
+ var notes=Array.prototype.slice.call($("notes").children),zz=Array.prototype.slice.call($("zzz").children);
+ var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches,playing=!reduce,autoEx=!reduce,ct=reduce?14:0,last=performance.now(),raf=0,t=0;
+ $("gr").style.strokeDasharray="200";$("ecg1").style.strokeDasharray="60 8";
+ function draw(){
+  panels.forEach(function(g,i){var a=cl((ct-i*3)/.6);if(ct>15.2)a*=1-cl((ct-15.2)/.7);if(!playing)a=1;g.style.opacity=a.toFixed(2)});
+  $("stress").setAttribute("transform","translate("+(Math.sin(t*41)*1.6).toFixed(1)+" "+(Math.cos(t*37)*1.6).toFixed(1)+")");
+  $("ecg1").style.strokeDashoffset=String((-t*90)%68);
+  $("scan").setAttribute("opacity",(.3+.7*Math.abs(Math.sin(t*2.5))).toFixed(2));$("p2knob").setAttribute("transform","rotate("+((t*120)%360).toFixed(1)+" -30 33)");
+  $("p3led").style.strokeDashoffset=String((-t*18)%11.1);$("p4led").style.strokeDashoffset=String((-t*8)%11.1);
+  notes.forEach(function(n,k){var ph=((t*.38)+k/4)%1;n.setAttribute("x",(200+k*42+Math.sin(t*2+k)*6).toFixed(1));n.setAttribute("y",(150-ph*120).toFixed(1));n.setAttribute("opacity",(1-ph).toFixed(2))});
+  zz.forEach(function(n,k){var ph=((t*.3)+k/3)%1;n.setAttribute("x",(136+ph*40+k*8).toFixed(1));n.setAttribute("y",(150-ph*80).toFixed(1));n.setAttribute("opacity",Math.sin(ph*Math.PI).toFixed(2))});
+  $("gr").style.strokeDashoffset=String(playing?200*(1-cl((ct-9.4)/3)):0);
+  var e=autoEx?(1-Math.cos(t*.7))/2:+sl.value;if(autoEx)sl.value=e;
+  ex.innerHTML=podExploded2(e,t);
+ }
+ function frame(now){var dt=Math.min(.5,(now-last)/1000);last=now;t+=dt;if(playing)ct=(ct+dt)%16.2;draw();raf=requestAnimationFrame(frame)}
+ function ensure(){if(!raf){last=performance.now();raf=requestAnimationFrame(frame)}}
+ sl.addEventListener("input",function(){autoEx=false;au.textContent="自動拆解";draw()});
+ au.onclick=function(){autoEx=!autoEx;au.textContent=autoEx?"停止自動":"自動拆解";if(autoEx)ensure()};
+ pb.onclick=function(){playing=!playing;pb.textContent=playing?"暫停漫畫":"播放漫畫";if(playing)ensure();else draw()};
+ pb.textContent=playing?"暫停漫畫":"播放漫畫";au.textContent=autoEx?"停止自動":"自動拆解";
+ if(reduce){sl.value=.85;draw()}else raf=requestAnimationFrame(frame);
+ return function(){if(raf)cancelAnimationFrame(raf);raf=0}
+}
+/* glossary motion graphics */
+function makeG(c){
+ var g={c:c,INK:"#141414",MU:"#4F4F4A",FT:"#FFFFFF",FL:"#F0F0EC",FR:"#DEDED8",O:[640,400],F:'"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC",sans-serif',TOPS:["#FFE3B0","#E4FFE4","#DCEEFF","#EBC9BF"]};
+ g.cl=function(x){return x<0?0:x>1?1:x};
+ g.eo=function(x){x=g.cl(x);return 1-Math.pow(1-x,3)};
+ g.pr=function(v,a,b){return g.cl((v-a)/(b-a))};
+ g.P=function(x,y,z){return [g.O[0]+(x-y)*.866,g.O[1]+(x+y)*.5-z]};
+ g.poly=function(ps,fill){c.beginPath();ps.forEach(function(p,i){var q=g.P(p[0],p[1],p[2]);if(i)c.lineTo(q[0],q[1]);else c.moveTo(q[0],q[1])});c.closePath();if(fill){c.fillStyle=fill;c.fill()}c.strokeStyle=g.INK;c.lineWidth=1.6;c.lineJoin="round";c.stroke()};
+ g.box=function(x,y,z,w,d,h,top,l,r){g.poly([[x,y+d,z],[x+w,y+d,z],[x+w,y+d,z+h],[x,y+d,z+h]],l||g.FL);g.poly([[x+w,y,z],[x+w,y+d,z],[x+w,y+d,z+h],[x+w,y,z+h]],r||g.FR);g.poly([[x,y,z+h],[x+w,y,z+h],[x+w,y+d,z+h],[x,y+d,z+h]],top||g.FT)};
+ g.ink=function(x,y,z,w,d,h){g.box(x,y,z,w,d,h,g.INK,"#2E2E2E","#3E3E3E")};
+ g.ln=function(pts,col,lw,dash){c.beginPath();pts.forEach(function(p,i){if(i)c.lineTo(p[0],p[1]);else c.moveTo(p[0],p[1])});c.setLineDash(dash||[]);c.strokeStyle=col||g.INK;c.lineWidth=lw||2;c.lineCap="round";c.lineJoin="round";c.stroke();c.setLineDash([])};
+ g.ln3=function(ps,col,lw,dash){g.ln(ps.map(function(p){return g.P(p[0],p[1],p[2])}),col,lw,dash)};
+ g.tx=function(s,x,y,size,col,o){o=o||{};var ga=c.globalAlpha;c.globalAlpha=ga*(o.a==null?1:o.a);c.font=(o.w||400)+" "+size+"px "+g.F;c.fillStyle=col||g.INK;c.textAlign=o.al||"left";c.textBaseline="alphabetic";c.fillText(s,x,y);c.globalAlpha=ga};
+ g.circ=function(x,y,r,fill,stroke,lw){c.beginPath();c.arc(x,y,r,0,7);if(fill){c.fillStyle=fill;c.fill()}if(stroke){c.strokeStyle=stroke;c.lineWidth=lw||1.6;c.stroke()}};
+ g.rect=function(x,y,w,h,fill,stroke,r){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r||0);else c.rect(x,y,w,h);if(fill){c.fillStyle=fill;c.fill()}if(stroke){c.strokeStyle=stroke;c.lineWidth=1.6;c.stroke()}};
+ g.arrow=function(x1,y1,x2,y2,col,lw){col=col||g.INK;g.ln([[x1,y1],[x2,y2]],col,lw||2);var a=Math.atan2(y2-y1,x2-x1),s=11;c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-s*Math.cos(a-.45),y2-s*Math.sin(a-.45));c.lineTo(x2-s*Math.cos(a+.45),y2-s*Math.sin(a+.45));c.closePath();c.fillStyle=col;c.fill()};
+ g.heart=function(x,y,s,fill){c.beginPath();c.moveTo(x,y+s*.9);c.bezierCurveTo(x-s*1.4,y+s*.1,x-s*.9,y-s*1.1,x,y-s*.35);c.bezierCurveTo(x+s*.9,y-s*1.1,x+s*1.4,y+s*.1,x,y+s*.9);c.fillStyle=fill||g.INK;c.fill()};
+ g.beat=function(t,per){var h=(t%per)/per;return Math.exp(-Math.pow((h-.1)/.07,2))};
+ g.ecg=function(x,pk,y0){var y=0;pk.forEach(function(p){var u=x-p;if(Math.abs(u)>90)return;y+=-110*Math.exp(-Math.pow(u/4,2))+22*Math.exp(-Math.pow((u-8)/4,2))-24*Math.exp(-Math.pow((u-45)/14,2))-12*Math.exp(-Math.pow((u+40)/10,2))});return y0+y};
+ g.person=function(x,y,s,fill){c.beginPath();c.arc(x,y-s*1.05,s*.42,0,7);c.fillStyle=fill||g.FT;c.fill();c.strokeStyle=g.INK;c.lineWidth=1.6;c.stroke();c.beginPath();c.arc(x,y+s*.45,s*.72,Math.PI,0);c.closePath();c.fill();c.stroke()};
+ g.qcurve=function(p0,p1,p2,u){var m=1-u;return [m*m*p0[0]+2*m*u*p1[0]+u*u*p2[0],m*m*p0[1]+2*m*u*p1[1]+u*u*p2[1]]};
+ return g;
+}
+var TERM={
+"g-hrv":{L:10,b:[[0,"心臟跳動，並不像節拍器一樣固定"],[3.4,"每兩次心跳之間的間隔，都有些微不同"],[6.8,"這種間隔的「變化」，就是心率變異度 HRV"]],
+ d:function(g,t){var pk=[330,440,590,715,875,990,1130],ms=[820,900,850,920,830,880],i;
+  g.heart(200,380,30*(1+.2*g.beat(t,.85)));g.tx("心跳",200,450,18,g.MU,{al:"center",w:700});
+  var rv=270+g.eo(g.pr(t,.3,4.5))*950,pts=[];for(var x=270;x<=rv;x+=2)pts.push([x,g.ecg(x,pk,390)]);if(pts.length>1)g.ln(pts,g.INK,2.4);
+  for(i=0;i<pk.length-1;i++){if(pk[i+1]>rv)break;var a=g.eo(g.pr(t,3.4+i*.35,3.9+i*.35));if(a<=0)continue;g.c.globalAlpha=a;g.ln([[pk[i],230],[pk[i+1],230]],g.MU,1.4);g.ln([[pk[i],222],[pk[i],238]],g.MU,1.4);g.ln([[pk[i+1],222],[pk[i+1],238]],g.MU,1.4);g.tx(ms[i]+" ms",(pk[i]+pk[i+1])/2,214,20,g.INK,{al:"center",w:700});g.c.globalAlpha=1}
+  var h=g.eo(g.pr(t,6.8,7.6));if(h>0){g.c.globalAlpha=h;g.rect(330,500,800,64,"rgba(20,20,20,.05)",null,14);g.tx("間隔有長有短 → 變化越大，通常越放鬆",730,541,24,g.INK,{al:"center",w:700});g.c.globalAlpha=1}}},
+"g-rr":{L:10,b:[[0,"心電圖上最高的尖峰，叫做 R 波"],[3.2,"相鄰兩個 R 波的時間差，就是 RR 間期"],[6.4,"Polar H10 逐拍量測 RR，以毫秒傳給 Pi 5"]],
+ d:function(g,t){g.O=[230,440];g.box(-50,-35,0,100,70,22);var q=g.P(50,35,0);g.tx("Polar H10",q[0],q[1]+34,18,g.MU,{al:"center",w:700});
+  var pk=[520,700,880],rv=420+g.eo(g.pr(t,.2,2.6))*560,pts=[],x;for(x=420;x<=rv;x+=2)pts.push([x,g.ecg(x,pk,380)]);if(pts.length>1)g.ln(pts,g.INK,2.4);
+  var a1=g.eo(g.pr(t,1,1.8));pk.forEach(function(p){if(p<rv){g.c.globalAlpha=a1;g.circ(p,270,12,null,g.INK,2);g.tx("R",p,240,18,g.INK,{al:"center",w:700});g.c.globalAlpha=1}});
+  var a2=g.eo(g.pr(t,3.2,4));if(a2>0){g.c.globalAlpha=a2;g.arrow(610,200,522,200);g.arrow(610,200,698,200);g.tx("RR 間期 = 820 ms",610,180,22,g.INK,{al:"center",w:700});g.c.globalAlpha=1}
+  var vals=[820,846,801,838,812],n=t<6.4?0:Math.min(5,Math.floor((t-6.4)/.6)+1),i;
+  g.tx("RR（ms）",1100,200,20,g.MU,{al:"center",w:700,a:g.eo(g.pr(t,6,6.6))});
+  for(i=0;i<n;i++){g.rect(1040,220+i*52,120,40,i==n-1?g.INK:"#FFFFFF",g.INK,8);g.tx(String(vals[i]),1100,247+i*52,20,i==n-1?"#FFFFFF":g.INK,{al:"center",w:700})}
+  if(t>6.4&&n<5){var f=((t-6.4)/.6)%1,s=g.P(0,0,22),tx=1040,ty=220+n*52,px=s[0]+(tx-s[0])*f,py=s[1]+(ty-s[1])*f-Math.sin(f*Math.PI)*90;g.rect(px-8,py-8,16,16,g.INK,null,3)}}},
+"g-rmssd":{L:14,b:[[0,"先算相鄰兩個 RR 間期的差值"],[4.5,"把每個差值平方，再取平均"],[8.5,"開根號，就得到 RMSSD"],[11.2,"RMSSD 越高，代表副交感神經越活躍、越放鬆"]],
+ d:function(g,t){var rr=[812,790,845,801,830,808],d=[-22,55,-44,29,-22],sq=[484,3025,1936,841,484],i;g.O=[540,500];
+  for(i=0;i<6;i++){var x=-260+i*95,h=(rr[i]-700)*1.1,a=g.eo(g.pr(t,.1+i*.12,.6+i*.12));if(a<=0)continue;g.c.globalAlpha=a;g.box(x,-25,0,50,50,h);var b=g.P(x+50,25,0);g.tx(String(rr[i]),b[0],b[1]+26,18,g.INK,{al:"center",w:700});g.c.globalAlpha=1}
+  for(i=0;i<5;i++){var a2=g.eo(g.pr(t,1+i*.5,1.5+i*.5));if(a2<=0)continue;var p1=g.P(-235+i*95,0,(rr[i]-700)*1.1),p2=g.P(-235+(i+1)*95,0,(rr[i+1]-700)*1.1);g.c.globalAlpha=a2;g.arrow(p1[0],p1[1]-16,p2[0],p2[1]-16,g.MU,1.6);g.tx((d[i]>0?"+":"")+d[i],(p1[0]+p2[0])/2,Math.min(p1[1],p2[1])-30,20,g.INK,{al:"center",w:700});g.c.globalAlpha=1}
+  var X=880,a3=g.eo(g.pr(t,4.5,5.2));if(a3>0){g.tx("差值平方",X,200,20,g.MU,{w:700,a:a3});for(i=0;i<5;i++)g.tx("("+(d[i]>0?"+":"")+d[i]+")² = "+sq[i],X,238+i*34,20,g.INK,{a:g.eo(g.pr(t,4.8+i*.3,5.2+i*.3))});g.tx("平均 = 6770 ÷ 5 = 1354",X,424,22,g.INK,{w:700,a:g.eo(g.pr(t,6.8,7.4))})}
+  var a4=g.eo(g.pr(t,8.5,9.3));if(a4>0){g.c.globalAlpha=a4;g.rect(X-16,452,360,86,g.INK,null,14);g.tx("√1354 ≈ 36.8 ms",X+164,508,32,"#FFFFFF",{al:"center",w:700});g.c.globalAlpha=1}
+  var a5=g.eo(g.pr(t,11.2,11.8));if(a5>0){g.c.globalAlpha=a5;g.arrow(X+360,540,X+360,470,g.INK,3);g.c.globalAlpha=1}}},
+"g-ans":{L:12,b:[[0,"自律神經有兩套系統，像蹺蹺板一樣互相拉扯"],[4,"壓力時：交感神經主導，心跳又快又規律"],[8,"放鬆時：副交感神經主導，心跳間隔變化變大，RMSSD 上升"]],
+ d:function(g,t){var rl=g.eo(g.pr(t,6.5,8)),a=-0.14+0.28*rl,cx=640,cy=470,L=330,c=g.c;
+  var lx=cx-L*Math.cos(a),ly=cy-L*Math.sin(a),rx=cx+L*Math.cos(a),ry=cy+L*Math.sin(a);
+  c.beginPath();c.moveTo(cx,cy);c.lineTo(cx-42,cy+72);c.lineTo(cx+42,cy+72);c.closePath();c.fillStyle=g.FL;c.fill();c.strokeStyle=g.INK;c.lineWidth=1.6;c.stroke();
+  g.ln([[lx,ly],[rx,ry]],g.INK,6);g.circ(cx,cy,7,g.INK);
+  function pan(x,y,dark,t1,t2){g.rect(x-115,y-100,230,86,dark?g.INK:"#FFFFFF",g.INK,14);g.tx(t1,x,y-62,24,dark?"#FFFFFF":g.INK,{al:"center",w:700});g.tx(t2,x,y-32,17,dark?"#D8D8D2":g.MU,{al:"center"})}
+  pan(lx,ly,rl<.5,"交感神經","戰或逃・心跳加快");pan(rx,ry,rl>=.5,"副交感神經","休息與修復・RMSSD ↑");
+  g.heart(640,240,26*(1+.2*g.beat(t,.55+.45*rl)));g.tx(Math.round(96-28*rl)+" bpm",640,300,22,g.INK,{al:"center",w:700})}},
+"g-rl":{L:12,b:[[0,"AI（agent）先做一個動作：選擇燈光與音樂"],[4,"環境（使用者的身體）回饋獎勵：RMSSD 的變化"],[8,"反覆試誤，AI 學會長期最有利的選擇"]],
+ d:function(g,t){g.O=[400,450];g.ink(-60,-60,0,120,120,80);var a=g.P(60,60,0);g.tx("AI agent",a[0],a[1]+36,22,g.INK,{al:"center",w:700});
+  g.O=[880,450];g.box(-60,-60,0,120,120,80);var b=g.P(60,60,0);g.tx("環境：使用者",b[0],b[1]+36,22,g.INK,{al:"center",w:700});var hq=g.P(0,0,80);g.heart(hq[0],hq[1]-4,14*(1+.2*g.beat(t,.9)));
+  var T1=[[470,260],[640,140],[810,260]],T2=[[810,520],[640,600],[470,520]],k,pts;
+  pts=[];for(k=0;k<=30;k++)pts.push(g.qcurve(T1[0],T1[1],T1[2],k/30));g.ln(pts,g.INK,2);g.arrow(pts[28][0],pts[28][1],810,260,g.INK,2);
+  pts=[];for(k=0;k<=30;k++)pts.push(g.qcurve(T2[0],T2[1],T2[2],k/30));g.ln(pts,g.INK,2,[6,6]);g.arrow(pts[28][0],pts[28][1],470,520,g.INK,2);
+  g.tx("動作：選燈光＋音樂",640,186,22,g.INK,{al:"center",w:700});g.tx("獎勵：RMSSD 變化",640,592,22,g.INK,{al:"center",w:700});
+  var u=(t%4)/4,p=u<.5?g.qcurve(T1[0],T1[1],T1[2],u*2):g.qcurve(T2[0],T2[1],T2[2],(u-.5)*2);g.circ(p[0],p[1],9,g.INK);
+  var n=Math.floor(t/4)+1;g.tx("第 "+n+" 次嘗試",1130,200,20,g.MU,{al:"center",w:700});g.rect(1060,216,140,12,"#EDEDE8",null,6);g.rect(1060,216,140*Math.min(1,t/12),12,g.INK,null,6);g.tx("經驗累積",1130,252,16,g.MU,{al:"center"})}},
+"g-qlearn":{L:12,b:[[0,"Q 值：AI 對每個方案「有多好」的估計"],[4,"拿到獎勵 R 之後，Q 值往 R 靠近一步"],[8,"α = 0.3：每次只靠近 30%，穩定又不會忘記過去"]],
+ d:function(g,t){g.O=[500,500];var Q=[2.1,5.3,-1.2,3.0],R=[12,9,10],ups=[1.5,5,8.5],qs=[5.3,7.31,7.817,8.472],k=0,i;while(k<3&&t>=ups[k])k++;
+  var cur=qs[0],tgt=null;if(k>0){var p=g.eo(g.pr(t,ups[k-1]+.6,ups[k-1]+1.8));cur=qs[k-1]+(qs[k]-qs[k-1])*p;tgt=R[k-1]}
+  for(i=0;i<4;i++){var x=-240+i*120,y=-30,v=i==1?cur:Q[i],h=Math.max(4,v*16);g.box(x,y,0,80,80,10,g.TOPS[i]);if(i==1)g.ink(x+15,y+15,10,50,50,h);else g.box(x+15,y+15,10,50,50,h);
+   var top=g.P(x+40,y+40,10+h);g.tx(v.toFixed(2),top[0],top[1]-16,18,g.INK,{al:"center",w:700});var lb=g.P(x+80,y+80,0);g.tx("A"+(i+1),lb[0],lb[1]+26,18,g.INK,{al:"center",w:700});
+   if(i==1&&tgt!=null){var z=10+tgt*16;g.ln3([[x+15,y+15,z],[x+65,y+15,z],[x+65,y+65,z],[x+15,y+65,z],[x+15,y+15,z]],g.MU,1.6,[5,5]);var tq=g.P(x+65,y+15,z);g.tx("R = "+tgt.toFixed(1),tq[0]+14,tq[1]+6,18,g.MU,{w:700})}}
+  var X=860;g.tx("Q(a) ← Q(a) + α × (R − Q(a))",X,230,24,g.INK,{w:700});g.tx("α = 0.3",X,268,20,g.MU);
+  if(k>0)g.tx(qs[k-1].toFixed(2)+" + 0.3 × ("+R[k-1].toFixed(1)+" − "+qs[k-1].toFixed(2)+") = "+qs[k].toFixed(2),X,330,20,g.INK,{w:700,a:g.eo(g.pr(t,ups[k-1]+.2,ups[k-1]+.8))});
+  g.tx("第 "+k+" 次更新",X,372,18,g.MU)}},
+"g-bandit":{L:12,b:[[0,"想像四台吃角子老虎機，每一台＝一種音光組合"],[4,"不知道哪台最好，只能一邊拉、一邊記錄結果"],[8,"每次只選一台、看結果 → 多臂老虎機（Bandit）問題"]],
+ d:function(g,t){g.O=[470,420];var seq=[0,1,2,3,1,1,3,1,0,1],rw=[[3,2,4],[8,9,7,10,9,8],[1,0,2],[5,4,6]],st=Math.floor(t/1.1),ph=(t%1.1)/1.1,sum=[0,0,0,0],cnt=[0,0,0,0],ri=[0,0,0,0],s,i;
+  for(s=0;s<Math.min(st,10);s++){var a=seq[s];sum[a]+=rw[a][ri[a]%rw[a].length];ri[a]++;cnt[a]++}
+  var cur=st<10?seq[st]:-1,curR=cur>=0?rw[cur][ri[cur]%rw[cur].length]:0;
+  for(i=0;i<4;i++){var x=-230+i*125;g.box(x,-35,0,80,70,90,g.TOPS[i]);var pull=(i==cur&&ph<.35)?Math.sin(ph/.35*Math.PI):0;var l0=g.P(x+80,0,56),l1=g.P(x+80,0,100-pull*36);g.ln([l0,l1],g.INK,3);g.circ(l1[0],l1[1],7,g.INK);
+   var lb=g.P(x+80,35,0);g.tx("A"+(i+1),lb[0],lb[1]+26,18,g.INK,{al:"center",w:700});
+   if(i==cur&&ph>.3){var tp=g.P(x+40,0,90),f=g.pr(ph,.3,1);g.circ(tp[0],tp[1]-20-f*50,16,"#FFFFFF",g.INK,2);g.tx("+"+curR,tp[0],tp[1]-14-f*50,15,g.INK,{al:"center",w:700,a:1-g.pr(ph,.85,1)})}}
+  var X=900;g.tx("平均獎勵（目前估計）",X,220,20,g.MU,{w:700});
+  for(i=0;i<4;i++){var m=cnt[i]?sum[i]/cnt[i]:0;g.tx("A"+(i+1),X,268+i*48,18,g.INK,{w:700});g.rect(X+40,254+i*48,240,16,"#EDEDE8",null,8);if(m>0)g.rect(X+40,254+i*48,m*24,16,i==1?g.INK:"#9A9A93",null,8);g.tx(cnt[i]?m.toFixed(1):"—",X+296,268+i*48,16,g.MU)}}},
+"g-egreedy":{L:12,b:[[0,"ε-greedy：在「探索新方案」與「利用最佳方案」之間取平衡"],[4,"ε = 0.2：80% 選目前 Q 值最高的，20% 隨機嘗試"],[8,"本研究第 7–10 場使用；前面先做基線與強制探索"]],
+ d:function(g,t){var tok=[1,1,1,0,1,1,1,1,0,1],picks=[2,5,3,7,0,8,6,1,4,9],st=Math.floor(t/1.2),ph=(t%1.2)/1.2,cur=picks[st%10],i;
+  for(i=0;i<10;i++){var x=280+i*72,up=i==cur?-14*g.eo(g.pr(ph,0,.25)):0;g.rect(x,230+up,56,56,tok[i]?g.INK:"#FFFFFF",g.INK,10);g.tx(tok[i]?"利用":"探索",x+28,264+up,15,tok[i]?"#FFFFFF":g.INK,{al:"center",w:700})}
+  var cx=280+cur*72+28,c=g.c;c.beginPath();c.moveTo(cx-10,190);c.lineTo(cx+10,190);c.lineTo(cx,205);c.closePath();c.fillStyle=g.INK;c.fill();
+  g.tx("8 個利用（80%）",280,322,17,g.MU);g.tx("2 個探索（20%）",992,322,17,g.MU,{al:"right"});
+  var ra=g.eo(g.pr(ph,.25,.45)),ex=["A1","A3","A4"][st%3];g.c.globalAlpha=ra;g.rect(460,350,360,58,tok[cur]?g.INK:"#FFFFFF",g.INK,14);g.tx(tok[cur]?"利用：選 Q 值最高的 A2":"探索：隨機試試 "+ex,640,387,22,tok[cur]?"#FFFFFF":g.INK,{al:"center",w:700});g.c.globalAlpha=1;
+  var segs=[[2,"S1–S2 基線（A2）"],[4,"S3–S6 強制探索"],[4,"S7–S10 ε-greedy"]],sx=280,W=720;for(i=0;i<3;i++){var w=W*segs[i][0]/10;g.rect(sx+2,470,w-4,46,i==2?g.INK:"#FFFFFF",g.INK,10);g.tx(segs[i][1],sx+w/2,499,16,i==2?"#FFFFFF":g.INK,{al:"center",w:700});sx+=w}}},
+"g-reward":{L:12,b:[[0,"Reward（獎勵）：告訴 AI 這次的選擇好不好"],[4,"原始公式：介入期 RMSSD − 壓力期 RMSSD"],[8,"修正後：介入期 RMSSD − 日常基線，不受壓力誘發成敗影響"]],
+ d:function(g,t){g.O=[440,470];var V=[46,40,52],N=["基線期","壓力期","介入期"],xs=[-270,-90,90],i;
+  var refOld=t>=4&&t<8,refNew=t>=8;
+  for(i=0;i<3;i++){var a=g.eo(g.pr(t,.2+i*.25,.8+i*.25));if(a<=0)continue;g.c.globalAlpha=a;var h=V[i]*3;if(i==2)g.ink(xs[i],-30,0,70,70,h);else g.box(xs[i],-30,0,70,70,h);var b=g.P(xs[i]+35,40,0);g.tx(N[i],b[0],b[1]+28,20,g.INK,{al:"center",w:700});var tp=g.P(xs[i]+35,5,h);g.tx(V[i]+" ms",tp[0],tp[1]-24,20,g.INK,{al:"center",w:700});g.c.globalAlpha=1}
+  if(refOld||refNew){var z=(refOld?V[1]:V[0])*3;g.ln3([[-290,5,z],[180,5,z]],g.MU,1.6,[6,6])}
+  var X=870,ao=g.eo(g.pr(t,4,4.6))*(t>=8?.4:1),an=g.eo(g.pr(t,8,8.6));
+  g.tx("舊公式",X,230,18,g.MU,{w:700,a:ao});g.tx("R = 介入 − 壓力 = 52 − 40 = 12",X,266,22,g.INK,{w:700,a:ao});
+  if(an>0){g.c.globalAlpha=an;g.rect(X-16,300,380,100,g.INK,null,14);g.tx("新公式（分析用）",X,334,18,"#D8D8D2",{w:700});g.tx("R = 介入 − 基線 = 52 − 46 = 6",X,372,22,"#FFFFFF",{w:700});g.c.globalAlpha=1}
+  g.tx("（示意數值）",X,440,16,g.MU)}},
+"g-stroop":{L:10,b:[[0,"畫面出現一個字：請說出字的「顏色」，不是字義"],[3.4,"字義和顏色衝突，大腦需要額外努力 → 輕度壓力"],[6.8,"本研究用它誘發壓力；校園情境的成功率約 20%"]],
+ d:function(g,t){var W=["紅","藍","綠","黃"],C=["#D64541","#2F6FD6","#2E9A57","#D9A21B"],pr=[[0,1],[1,2],[2,3],[3,0],[0,2],[1,3],[2,0],[3,1]],k=Math.floor(t/1.25)%8,ph=(t%1.25)/1.25,w=pr[k][0],col=pr[k][1],i;
+  g.rect(380,160,460,260,"#FFFFFF",g.INK,18);g.tx("說出字的「顏色」",610,204,20,g.MU,{al:"center",w:700});g.tx(W[w],610,370,140,C[col],{al:"center",w:700,a:g.eo(g.pr(ph,0,.15))});
+  for(i=0;i<4;i++){var x=380+i*117,sel=i==col&&ph>.55;g.rect(x,446,104,56,sel?g.INK:"#FFFFFF",g.INK,12);g.circ(x+28,474,9,C[i]);g.tx(W[i],x+64,482,22,sel?"#FFFFFF":g.INK,{al:"center",w:700})}
+  var lv=.1+.8*g.eo(g.pr(t,0,9));g.rect(960,170,44,300,"#FFFFFF",g.INK,12);g.rect(966,176+288*(1-lv),32,288*lv,g.INK,null,8);g.tx("壓力",982,500,18,g.MU,{al:"center",w:700});
+  g.heart(1110,300,20*(1+.2*g.beat(t,.62)));g.tx(Math.round(78+lv*14)+" bpm",1110,352,20,g.INK,{al:"center",w:700})}},
+"g-ectopic":{L:10,b:[[0,"偶爾會出現一次異常的心跳（ectopic beat）"],[3.4,"相鄰 RR 差超過 200 ms，就判定為異常"],[6.8,"改用周圍數值的中位數取代，避免 RMSSD 被拉偏"]],
+ d:function(g,t){var base=[812,798,825,806,790,815,801,822,808,1090,814,796,820,805,811,799],X0=270,dx=52,fix=g.eo(g.pr(t,6.8,8)),i;
+  function yOf(v){return 520-(v-700)}
+  g.ln([[X0-24,560],[X0+15*dx+24,560]],g.MU,1.2);g.tx("RR（ms）",X0-24,152,16,g.MU,{w:700});
+  var pts=base.map(function(v,i){return [X0+i*dx,yOf(i==9?v+(809-v)*fix:v)]}),n=Math.max(1,Math.floor(g.eo(g.pr(t,.2,2.6))*16));
+  g.ln(pts.slice(0,n),g.INK,2);pts.slice(0,n).forEach(function(p,i){g.circ(p[0],p[1],i==9?8:5,i==9&&fix<1&&t>3.4?g.INK:"#FFFFFF",g.INK,2)});
+  if(t>3.4&&n>9){var a=g.eo(g.pr(t,3.4,4))*(1-fix);g.c.globalAlpha=a;g.ln([[X0,yOf(1008)],[X0+15*dx,yOf(1008)]],g.MU,1.4,[6,6]);g.tx("門檻：前一拍 +200 ms",X0+15*dx,yOf(1008)-10,16,g.MU,{al:"right",w:700});g.circ(pts[9][0],pts[9][1],18,null,g.INK,2);g.tx("|ΔRR| = 276 ms",pts[9][0]+28,pts[9][1]+6,18,g.INK,{w:700});g.c.globalAlpha=1}
+  if(t>5&&fix<.05){var p=pts[9];g.ln([[p[0]-14,p[1]-14],[p[0]+14,p[1]+14]],g.INK,3);g.ln([[p[0]+14,p[1]-14],[p[0]-14,p[1]+14]],g.INK,3)}
+  if(fix>0)g.tx("以中位數 809 ms 取代",pts[9][0]+22,pts[9][1]-22,18,g.INK,{w:700,a:fix})}},
+"g-window":{L:12,b:[[0,"RMSSD 不是整場一次算完，而是每次看最近 60 秒"],[4,"視窗一路往前滑動，持續更新 RMSSD"],[8,"這樣能即時追蹤放鬆程度的變化"]],
+ d:function(g,t){var N=60,X0=170,X1=1110,dx=(X1-X0)/N,rr=[],i;for(i=0;i<N;i++)rr.push(800+40*Math.sin(i*.9)+25*Math.sin(i*2.3+1)+i*.6);
+  var Wn=14,u=g.pr(t,.5,10.5),ws=Math.floor(u*(N-Wn)),wx=X0+ws*dx;
+  for(i=0;i<N;i++){var x=X0+i*dx+dx/2,h=(rr[i]-720)*.55,inW=i>=ws&&i<ws+Wn;g.ln([[x,330],[x,330-h]],inW?g.INK:"#C8C8C1",4)}
+  g.rect(wx-4,170,Wn*dx+8,176,null,g.INK,10);g.c.setLineDash([]);g.tx("60 秒",wx+Wn*dx/2,160,20,g.INK,{al:"center",w:700});
+  g.ln([[300,560],[1000,560]],g.MU,1.2);g.ln([[300,560],[300,420]],g.MU,1.2);g.tx("RMSSD",300,408,16,g.MU,{w:700});
+  var pts=[];for(var s=0;s<=ws;s+=2){var sum=0;for(i=s+1;i<s+Wn;i++){var dd=rr[i]-rr[i-1];sum+=dd*dd}var r=Math.sqrt(sum/(Wn-1));pts.push([300+s/(N-Wn)*700,560-(r-20)*2.4])}
+  if(pts.length>1)g.ln(pts,g.INK,2.4);if(pts.length){var e=pts[pts.length-1];g.circ(e[0],e[1],6,g.INK)}}},
+"g-edge":{L:10,b:[[0,"Edge RL：AI 的學習與決策，都在裝置本地完成"],[3.4,"心率與行為資料不上傳雲端，保護隱私"],[6.8,"不受網路延遲影響；Pi 5 約 NT$4,895 就能部署"]],
+ d:function(g,t){g.O=[500,470];var k;g.ln3([[-200,-200,0],[200,-200,0],[200,200,0],[-200,200,0],[-200,-200,0]],g.MU,1.4,[6,6]);var fv=g.P(-200,-200,0);g.tx("本地：學校或家中",fv[0],fv[1]-14,18,g.MU,{al:"center",w:700});
+  g.box(-170,60,0,50,40,16);var sq=g.P(-120,100,0);g.tx("Polar H10",sq[0]-30,sq[1]+28,16,g.MU,{al:"center",w:700});
+  g.ink(-50,-50,0,100,100,40);var pt=g.P(0,0,40);g.tx("Raspberry Pi 5",pt[0],pt[1]+6,16,"#FFFFFF",{al:"center",w:700});
+  for(k=0;k<3;k++){var f=((t*.5)+k/3)%1,x=-145+145*f,y=80-80*f,z=16+24*f+Math.sin(f*Math.PI)*60;g.box(x-6,y-6,z,12,12,12)}
+  var cx=1010,cy=230,c=g.c;c.beginPath();c.arc(cx-40,cy+10,28,Math.PI*.5,Math.PI*1.5);c.arc(cx,cy-12,40,Math.PI,0);c.arc(cx+44,cy+10,26,Math.PI*1.5,Math.PI*.5);c.closePath();c.fillStyle="#FFFFFF";c.fill();c.strokeStyle=g.INK;c.lineWidth=2;c.stroke();g.tx("雲端",cx,cy+18,20,g.INK,{al:"center",w:700});
+  g.ln([[pt[0]+40,pt[1]-20],[cx-60,cy+30]],g.MU,1.6,[6,6]);var xa=g.eo(g.pr(t,3.4,4)),mx=(pt[0]+40+cx-60)/2,my=(pt[1]-20+cy+30)/2;g.c.globalAlpha=xa;g.ln([[mx-18,my-18],[mx+18,my+18]],g.INK,4);g.ln([[mx+18,my-18],[mx-18,my+18]],g.INK,4);g.tx("不上傳",mx,my-30,18,g.INK,{al:"center",w:700});g.c.globalAlpha=1;
+  var ca=g.eo(g.pr(t,6.8,7.4));g.c.globalAlpha=ca;g.circ(1010,460,40,"#FFFFFF",g.INK,2);var an=t*1.2;g.ln([[1010,460],[1010+26*Math.sin(an),460-26*Math.cos(an)]],g.INK,3);g.ln([[1010,460],[1010,438]],g.INK,3);g.tx("T8 準時決策",1010,530,18,g.INK,{al:"center",w:700});g.c.globalAlpha=1}},
+"g-nof1":{L:12,b:[[0,"傳統研究：很多人各做一次，再取平均"],[4,"N-of-1：同一個人重複多次，和自己比較"],[8,"找出「此人、此時、此刻」最適合的放鬆方案"]],
+ d:function(g,t){var i,a=g.eo(g.pr(t,0,.8)),m=g.eo(g.pr(t,1.5,3.5));g.tx("傳統研究",360,190,24,g.INK,{al:"center",w:700,a:a});
+  for(i=0;i<8;i++){var px=270+(i%4)*60,py=280+Math.floor(i/4)*90,tx=360,ty=420;g.c.globalAlpha=a*(1-m*.85);g.person(px+(tx-px)*m*.6,py+(ty-py)*m*.6,26);g.c.globalAlpha=1}
+  var ba=g.eo(g.pr(t,2.5,3.5));g.c.globalAlpha=ba;g.rect(300,470,120,26,g.MU,null,8);g.tx("全體平均",360,530,18,g.MU,{al:"center",w:700});g.c.globalAlpha=1;
+  g.ln([[620,170],[620,560]],"#D5D5CF",1.4,[6,6]);
+  var b=g.eo(g.pr(t,4,4.6));g.tx("N-of-1",900,190,24,g.INK,{al:"center",w:700,a:b});g.c.globalAlpha=b;g.person(720,330,30,g.INK);g.c.globalAlpha=1;
+  var best=[1,1,3,1,0,1,1,3,1,1];for(i=0;i<10;i++){var ta=g.eo(g.pr(t,4.4+i*.3,4.8+i*.3));if(ta<=0)continue;var x=790+i*40;g.c.globalAlpha=ta;g.rect(x,290,32,70,"#FFFFFF",g.INK,6);var hh=best[i]==1?50:24;g.rect(x+8,352-hh,16,hh,best[i]==1?g.INK:"#BDBDB5",null,3);g.c.globalAlpha=1}
+  g.tx("S1 → S10",990,388,16,g.MU,{al:"center",a:b});
+  var fa=g.eo(g.pr(t,8,8.6));if(fa>0){g.c.globalAlpha=fa;g.arrow(990,410,990,450,g.INK,2);g.rect(860,460,260,60,g.INK,null,14);g.tx("專屬最佳方案：A2",990,498,22,"#FFFFFF",{al:"center",w:700});g.c.globalAlpha=1}}}
+};
+function startTerm(id){
+ var cv=document.getElementById("termCv"),S=TERM[id];if(!cv||!S)return null;
+ var c=cv.getContext("2d"),g=makeG(c),t=0,playing=!matchMedia("(prefers-reduced-motion: reduce)").matches,last=performance.now(),raf=0,name=GL[id].n;
+ var seek=document.getElementById("termSeek"),tm=document.getElementById("termTime"),pb=document.getElementById("termPlay"),big=document.getElementById("termBig");
+ seek.max=S.L;if(!playing)t=S.b[S.b.length-1][0]+1.5;
+ function render(){
+  c.setTransform(cv.width/1280,0,0,cv.height/720,0,0);c.globalAlpha=1;c.fillStyle="#FFFFFF";c.fillRect(0,0,1280,720);
+  c.strokeStyle="#F1F1ED";c.lineWidth=1;c.beginPath();for(var k=-18;k<=34;k++){var y0=k*44;c.moveTo(0,y0);c.lineTo(1280,y0+739);c.moveTo(0,y0);c.lineTo(1280,y0-739)}c.stroke();
+  g.O=[640,400];S.d(g,t);c.globalAlpha=1;c.setLineDash([]);
+  g.tx("名詞詳解",60,62,16,g.MU,{w:700});g.tx(name,60,100,30,g.INK,{w:700});
+  var bi=0;S.b.forEach(function(b,k){if(t>=b[0])bi=k});var b=S.b[bi],a=g.eo(g.pr(t-b[0],0,.5)),dy=(1-a)*12;
+  c.globalAlpha=a;g.circ(80,642+dy,17,g.INK);g.tx(String(bi+1),80,649+dy,17,"#FFFFFF",{al:"center",w:700});g.tx(b[1],110,651+dy,26,g.INK,{w:700});c.globalAlpha=1;
+  for(k=0;k<S.b.length;k++)g.circ(1220-(S.b.length-1-k)*22,644,5,k==bi?g.INK:"#D5D5CF");
+ }
+ function fmt(v){var s=Math.floor(v);return "0:"+(s<10?"0":"")+s}
+ function sync(){seek.value=t;tm.textContent=fmt(t)+" / "+fmt(S.L)}
+ function setPlay(p){playing=p;pb.innerHTML=ic(p?"pause":"play");pb.setAttribute("aria-label",p?"暫停":"播放");big.hidden=p;if(p){last=performance.now();if(!raf)raf=requestAnimationFrame(loop)}else if(raf){cancelAnimationFrame(raf);raf=0}}
+ function loop(now){raf=0;var dt=Math.min(.25,(now-last)/1000);last=now;t=(t+dt)%S.L;render();sync();raf=requestAnimationFrame(loop)}
+ seek.addEventListener("input",function(){t=+seek.value;render();sync()});
+ pb.onclick=function(){setPlay(!playing)};big.onclick=function(){setPlay(true)};cv.onclick=function(){setPlay(!playing)};
+ function size(){var dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth||640;cv.width=Math.round(w*dpr);cv.height=Math.round(w*9/16*dpr);render()}
+ size();sync();window.addEventListener("resize",size);setPlay(playing);
+ return function(){if(raf)cancelAnimationFrame(raf);raf=0;window.removeEventListener("resize",size)}
+}
+function startHome(){var a=startHero(),b=startVideo();return function(){if(a)a();if(b)b()}}
+
+/* 22-minute session simulation */
+function startSim(){
+ var PH=[["基線期","Baseline",3,"#6E9BEF","BLE 接收 RR","RMSSD 中位數（整段 3 min）","環境靜默"],["壓力誘發","Stress",3,"#EE8AA0","BLE + Stroop GUI","RMSSD 平均（僅 T4–T6）","GUI 顯示 Stroop 題目・無音訊"],["決策","Decision",2,"#F0B45A","BLE 持續","T8：RL agent 選擇 action","準備切換"],["介入適應","Adapt",3,"#5CC8B8","BLE 持續","RMSSD 監測（不計入 reward）","燈光切換・音訊 fade-in"],["有效介入","Effective",7,"#58BE87","BLE 持續","RMSSD 中位數（7 min 主訊號）","介入穩定播放 7 分鐘"],["結束","End",4,"#A99BEF","BLE 持續","T18：計算 reward・更新 Q-table","音訊 fade-out・燈光復原"]];
+ function $(i){return document.getElementById(i)}
+ var bar=$("simBar"),st=[0],segs=[];
+ PH.forEach(function(p,i){var d=document.createElement("div");d.className="sg";d.style.flex=p[2];d.style.background=p[3];d.innerHTML="<b>"+p[0]+"</b>"+p[2]+" min";bar.appendChild(d);segs.push(d);st.push(st[i]+p[2])});
+ var A=[["A1 專注鎮定",[255,180,50]],["A2 自然沉浸",[200,255,200]],["A3 能量流動",[180,220,255]],["A4 暗光深層",[170,50,25]]];
+ var Q0=[2.1,5.3,-1.2,3.0],R=12,Q1=Q0[1]+0.3*(R-Q0[1]),fills=[],vals=[],labs=[];
+ A.forEach(function(a){var r=document.createElement("div");r.className="qrow";r.innerHTML="<span>"+a[0]+'</span><span class="qtrack"><i></i></span><span></span>';$("qr").appendChild(r);labs.push(r.children[0]);fills.push(r.querySelector("i"));vals.push(r.children[2])});
+ function mix(c,f){var o=[205,205,198];return "rgb("+o.map(function(v,i){return Math.round(v+(c[i]-v)*f)}).join(",")+")"}
+ function pad(x){return (x>9?"":"0")+x}
+ function g(x,c,w,a){return a*Math.exp(-Math.pow((x-c)/w,2))}
+ function wave(x){return g(x,.15,.03,.12)+g(x,.28,.008,-.15)+g(x,.3,.012,1)+g(x,.325,.01,-.25)+g(x,.55,.05,.25)}
+ var ledEls=Array.prototype.slice.call(document.querySelectorAll(".ledc"));
+ var cv=$("ecg"),cx=cv.getContext("2d"),W=0,H=90,buf=[],bp=0,hr=74,rm=46,last=performance.now(),simT=0,LOOP=48,raf=0,playing=true,wi=-1;
+ function size(){var dpr=window.devicePixelRatio||1;W=cv.clientWidth||300;cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0);while(buf.length<W)buf.unshift(0);while(buf.length>W)buf.shift()}
+ size();window.addEventListener("resize",size);
+ var HT=[74,86,80,74,66,68],RT=[46,39,42,47,51,50],WD=["紅","藍","綠","黃"],WC=["#E5534B","#4C8DF6","#3FB950","#E3B341"],MSG=["請靜坐・戴上心率帶","","休息一下・喘口氣","燈光音樂切換中…","放鬆中…","VAS 放鬆評估 0–100"];
+ var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+ if(reduce){playing=false;simT=26}
+ var btn=$("simBtn");btn.textContent=playing?"暫停":"播放";
+ btn.onclick=function(){playing=!playing;btn.textContent=playing?"暫停":"播放";last=performance.now();if(playing&&!raf)raf=requestAnimationFrame(fr)};
+ function draw(now,dt){
+  var t=simT%LOOP,m=Math.min(22,t/2),i=0;while(i<5&&m>=st[i+1])i++;
+  segs.forEach(function(s,j){s.className=j==i?"sg on":"sg"});
+  $("ph").style.left=(m/22*100)+"%";
+  var s=Math.floor(m*60);$("clk").textContent="T = "+pad(Math.floor(s/60))+":"+pad(s%60)+" / 22:00";
+  var k=Math.min(1,dt*1.2);hr+=(HT[i]-hr)*(dt?k:1);rm+=(RT[i]-rm)*(dt?k:1);
+  $("hr").textContent=Math.round(hr+Math.sin(now/700)*1.5)+" bpm";$("rm").textContent=(rm+Math.sin(now/900)*.4).toFixed(1)+" ms";
+  var n=dt?Math.round(110*dt):W;for(var j=0;j<n;j++){bp+=hr/60/110;buf.push(wave(bp%1));buf.shift()}
+  cx.clearRect(0,0,W,H);cx.strokeStyle="#E4E4DF";cx.lineWidth=1;for(j=0;j<4;j++){cx.beginPath();cx.moveTo(0,j*29+1);cx.lineTo(W,j*29+1);cx.stroke()}
+  cx.strokeStyle=PH[i][3];cx.lineWidth=2;cx.beginPath();buf.forEach(function(y,x){var yy=68-y*58;if(x)cx.lineTo(x,yy);else cx.moveTo(x,yy)});cx.stroke();
+  var f=0;if(m>=8)f=Math.min(1,m-8);if(m>=18)f=Math.max(0,1-(m-18));
+  var col=mix(A[1][1],f*.9),full=mix(A[1][1],1);
+  ledEls.forEach(function(c){c.style.fill=f>0?col:"#BDBDB5"});
+  $("ledGlow").setAttribute("opacity",(f*.9).toFixed(3));$("ledGlow").setAttribute("stroke",full);
+  $("washRect").setAttribute("opacity",(f*.45).toFixed(3));$("washStop").setAttribute("stop-color",full);$("washStop2").setAttribute("stop-color",full);
+  var w=$("scr");
+  if(i==1){var qq=Math.floor(now/700)%4;if(qq!=wi){wi=qq;w.textContent=WD[qq];w.setAttribute("fill",WC[(qq+1)%4]);w.setAttribute("font-size","58")}}
+  else{wi=-1;w.setAttribute("font-size","15");w.setAttribute("fill","#4F4F4A");w.textContent=MSG[i]}
+  var pulse=Math.exp(-Math.pow(((bp%1)-.3)/.07,2));
+  $("hb").setAttribute("r",(2.5+3.5*pulse).toFixed(2));$("hb").setAttribute("opacity",(.35+.65*pulse).toFixed(2));
+  $("ble").style.strokeDashoffset=String(-(now/45)%22);
+  $("piLed").setAttribute("opacity",Math.floor(now/260)%2?"1":".25");
+  var br=Math.sin(now/1000*Math.PI*2*(i==1?.34:(m>=8&&m<18?.17:.24)));
+  $("body").setAttribute("transform","translate(0 "+(-br*2).toFixed(2)+")");
+  $("head").setAttribute("transform","translate(0 "+(-br*2.4+(i==1?Math.sin(now/180)*.8:0)).toFixed(2)+")");
+  var audio=m>=8&&(m<18||f>0),nt=$("notes").children;
+  $("notes").setAttribute("opacity",audio?(m>=18?f:Math.min(1,(m-8)*1.5)).toFixed(2):"0");
+  for(var z=0;z<nt.length;z++){var ph=((now/2400)+z/3)%1;nt[z].setAttribute("x",(368+z*12+Math.sin(now/500+z)*6).toFixed(1));nt[z].setAttribute("y",(196-ph*80).toFixed(1));nt[z].setAttribute("opacity",(1-ph).toFixed(2))}
+  $("hp").textContent=m>=8?(m>=18?(f>0?"耳機：音訊 fade-out":"耳機：靜音"):"耳機：♪ nature.mp3 自然環境音"):(i==1?"耳機：無音訊・說出字的顏色":"耳機：靜音");
+  var up=m>=18?Math.min(1,m-18):0;
+  for(j=0;j<4;j++){var qv=Q0[j];if(j==1)qv=Q0[1]+(Q1-Q0[1])*up;fills[j].style.width=(Math.max(0,qv)/10*100)+"%";
+   var chosen=m<8||j==1;fills[j].style.background=chosen?mix(A[j][1],m>=8?1:.6):"#CFCFC8";labs[j].style.fontWeight=(m>=8&&j==1)?"700":"400";labs[j].style.opacity=chosen?"1":".55";vals[j].textContent=qv.toFixed(2)}
+  $("qs").textContent=m>=18?"reward R = 介入 − 壓力 = 12.0（模擬）\nQ(A2) ← 5.30 + 0.3 × (12.0 − 5.30) = "+Q1.toFixed(2):(m>=8?"ε-greedy：80% 選 Q 值最大 → A2\n綠白光・亮度 70%・nature.mp3":"等待 T8 決策點…\n本場位於 S7–S10（ε = 0.2）");
+  var p=$("pill");p.textContent=PH[i][0]+" "+PH[i][1];p.style.background=PH[i][3];
+  $("ct").textContent="感測："+PH[i][4]+"　｜　運算："+PH[i][5]+"　｜　IoT："+PH[i][6];
+ }
+ function fr(now){raf=0;var dt=Math.min(.1,(now-last)/1000);last=now;if(playing){simT+=dt;draw(now,dt);raf=requestAnimationFrame(fr)}}
+ draw(performance.now(),0);
+ if(playing)raf=requestAnimationFrame(fr);
+ return function(){playing=false;if(raf)cancelAnimationFrame(raf);window.removeEventListener("resize",size)};
+}
+
+route();
+</script>
+
+</body></html>
